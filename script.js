@@ -230,6 +230,9 @@ function processSpeechResult(text) {
         updateMicUI(false);
     }
 
+    // Save to chat history as interlocutore
+    saveToChatHistory('interlocutore', text);
+
     processSpeechContext(text, userDirectlyAddressed);
 }
 
@@ -344,6 +347,8 @@ settingsSaveBtn.addEventListener('click', () => {
 clearMemoryBtn.addEventListener('click', () => {
     if (confirm("Vuoi davvero cancellare la cronologia delle tue risposte?")) {
         localStorage.removeItem('vocale_history');
+        localStorage.removeItem('vocale_chat_history');
+        localStorage.removeItem('vocale_phrase_frequencies');
         alert("Cronologia cancellata.");
     }
 });
@@ -616,6 +621,52 @@ function getHistory() {
     return hist ? JSON.parse(hist) : [];
 }
 
+function getPhraseFrequencies() {
+    const freq = localStorage.getItem('vocale_phrase_frequencies');
+    return freq ? JSON.parse(freq) : {};
+}
+
+function saveToFrequencies(text) {
+    if (!text || text.length < 2) return;
+    
+    // Ignore emergency phrases
+    const isEmergency = getEmergencyConfig().some(item => item.text === text);
+    if (isEmergency) return;
+    
+    let frequencies = getPhraseFrequencies();
+    frequencies[text] = (frequencies[text] || 0) + 1;
+    localStorage.setItem('vocale_phrase_frequencies', JSON.stringify(frequencies));
+}
+
+function getTopPreferredPhrases(limit = 5) {
+    const frequencies = getPhraseFrequencies();
+    return Object.entries(frequencies)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(entry => entry[0]);
+}
+
+function getChatHistory() {
+    const hist = localStorage.getItem('vocale_chat_history');
+    return hist ? JSON.parse(hist) : [];
+}
+
+function saveToChatHistory(role, text) {
+    if (!text) return;
+    let history = getChatHistory();
+    history.push({ role, text });
+    if (history.length > 8) { // Keep last 8 turns (4 full exchanges)
+        history.shift();
+    }
+    localStorage.setItem('vocale_chat_history', JSON.stringify(history));
+}
+
+function formatChatHistoryForPrompt() {
+    const history = getChatHistory();
+    if (history.length === 0) return "Nessuna conversazione precedente.";
+    return history.map(turn => `${turn.role === 'utente' ? 'Utente' : 'Interlocutore'}: "${turn.text}"`).join('\n');
+}
+
 function saveToHistory(text) {
     if (!text || text.length < 2) return;
     
@@ -628,6 +679,10 @@ function saveToHistory(text) {
     history.unshift(text);
     history = history.slice(0, 15);
     localStorage.setItem('vocale_history', JSON.stringify(history));
+
+    // Save to frequencies and chat history
+    saveToFrequencies(text);
+    saveToChatHistory('utente', text);
 }
 
 // Time of day context helper
@@ -810,10 +865,12 @@ async function processSpeechContext(text, userDirectlyAddressed = false) {
     
     showStatus("L'IA sta pensando...");
     
-    const history = getHistory();
-    const historyContext = history.length > 0 
-        ? history.join(', ')
-        : "Nessuno storico.";
+    const preferred = getTopPreferredPhrases(5);
+    const preferredContext = preferred.length > 0
+        ? preferred.join(', ')
+        : "Nessuna frase preferita ancora.";
+
+    const chatHistoryContext = formatChatHistoryForPrompt();
 
     const timeOfDay = getTimeOfDay();
     
@@ -824,7 +881,11 @@ async function processSpeechContext(text, userDirectlyAddressed = false) {
 
     const systemPrompt = `Motore CAA per muto. Rispondi al contesto con 3 opzioni in italiano, brevi (1-4 parole), naturali ed empatiche.
 Dati utente: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
-Tono/Storico preferito: ${historyContext}.
+Espressioni più frequenti e preferite dall'utente (adattati a questo stile): ${preferredContext}.
+
+Cronologia degli ultimi scambi della conversazione (usa questo contesto per rispondere in modo coerente):
+${chatHistoryContext}
+
 Rispondi SOLO con array JSON di 3 stringhe. Es: ["Sì, grazie", "No, a posto", "Non ho capito"]`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
@@ -899,3 +960,12 @@ window.addEventListener('resize', () => {
         visualizerCanvas.height = visualizerCanvas.offsetHeight;
     }
 });
+
+// Register PWA Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('[PWA] Service Worker registrato con successo scope:', reg.scope))
+            .catch(err => console.error('[PWA] Registrazione Service Worker fallita:', err));
+    });
+}
