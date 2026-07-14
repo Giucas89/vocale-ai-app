@@ -5,6 +5,7 @@ let listeningMode = localStorage.getItem('vocale_listening_mode') || 'manual';
 let apiKey = localStorage.getItem('vocale_api_key') || '';
 let username = localStorage.getItem('vocale_username') || '';
 let locationContext = localStorage.getItem('vocale_location') || 'Generico';
+let modelId = localStorage.getItem('vocale_model_id') || 'gemini-3.1-flash-lite';
 
 // DOM Elements
 const micBtn = document.getElementById('mic-btn');
@@ -30,6 +31,7 @@ const apiKeyInput = document.getElementById('api-key-input');
 const usernameInput = document.getElementById('username-input');
 const locationSelect = document.getElementById('location-select');
 const listeningModeSelect = document.getElementById('listening-mode-select');
+const modelSelect = document.getElementById('model-select');
 const voiceSelect = document.getElementById('voice-select');
 const voiceRate = document.getElementById('voice-rate');
 const voicePitch = document.getElementById('voice-pitch');
@@ -167,7 +169,7 @@ if (SpeechRecognition) {
             heardBox.classList.remove('hidden');
             heardBox.classList.remove('alert-glow');
 
-            // Start debounce timer (wait 600ms of absolute silence before processing)
+            // Start debounce timer (wait 500ms of absolute silence before processing)
             interimSilenceTimer = setTimeout(() => {
                 console.log("Silenzio rilevato. Processo trascrizione intermedia per accelerare la risposta.");
                 // Stop microphone to finalize speech stream
@@ -175,7 +177,7 @@ if (SpeechRecognition) {
                     recognition.stop();
                 }
                 processSpeechResult(interimTranscript.trim());
-            }, 600);
+            }, 500);
         }
     };
 
@@ -238,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usernameInput.value = username;
     locationSelect.value = locationContext;
     listeningModeSelect.value = listeningMode;
+    modelSelect.value = modelId;
     
     // Sliders init
     voiceRate.value = localStorage.getItem('vocale_voice_rate') || '1.0';
@@ -275,6 +278,7 @@ settingsOpenBtn.addEventListener('click', () => {
     usernameInput.value = localStorage.getItem('vocale_username') || '';
     locationSelect.value = localStorage.getItem('vocale_location') || 'Generico';
     listeningModeSelect.value = localStorage.getItem('vocale_listening_mode') || 'manual';
+    modelSelect.value = localStorage.getItem('vocale_model_id') || 'gemini-3.1-flash-lite';
     
     const currentEm = getEmergencyConfig();
     currentEm.forEach((item, index) => {
@@ -295,11 +299,13 @@ settingsSaveBtn.addEventListener('click', () => {
     username = usernameInput.value.trim();
     locationContext = locationSelect.value;
     listeningMode = listeningModeSelect.value;
+    modelId = modelSelect.value;
     
     localStorage.setItem('vocale_api_key', apiKey);
     localStorage.setItem('vocale_username', username);
     localStorage.setItem('vocale_location', locationContext);
     localStorage.setItem('vocale_listening_mode', listeningMode);
+    localStorage.setItem('vocale_model_id', modelId);
     localStorage.setItem('vocale_voice_rate', voiceRate.value);
     localStorage.setItem('vocale_voice_pitch', voicePitch.value);
     localStorage.setItem('vocale_voice_name', voiceSelect.value);
@@ -806,32 +812,22 @@ async function processSpeechContext(text, userDirectlyAddressed = false) {
     
     const history = getHistory();
     const historyContext = history.length > 0 
-        ? `Ecco alcune delle risposte reali preferite in passato dall'utente, usale per allineare il tono di voce e lo stile comunicativo: ${history.join(', ')}`
-        : "Nessun dato storico disponibile.";
+        ? history.join(', ')
+        : "Nessuno storico.";
 
     const timeOfDay = getTimeOfDay();
     
     let targetAlertInstruction = "";
     if (userDirectlyAddressed) {
-        targetAlertInstruction = "\nATTENZIONE: L'interlocutore ha pronunciato il nome dell'utente. Questa frase è rivolta direttamente a lui. Dai priorità a risposte di cortesia, saluti o risposte dirette a una domanda specifica.";
+        targetAlertInstruction = " ATTENZIONE: l'interlocutore ha chiamato l'utente per nome; dai priorità a risposte dirette o saluti.";
     }
 
-    const systemPrompt = `Sei il motore di comunicazione di un'app di CAA per una persona muta.
-L'app ascolta l'ambiente circostante e propone 3 risposte brevi, naturali ed empatiche in lingua italiana.
-Genera esattamente 3 opzioni di risposta pertinenti al contesto fornito.
+    const systemPrompt = `Motore CAA per muto. Rispondi al contesto con 3 opzioni in italiano, brevi (1-4 parole), naturali ed empatiche.
+Dati utente: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
+Tono/Storico preferito: ${historyContext}.
+Rispondi SOLO con array JSON di 3 stringhe. Es: ["Sì, grazie", "No, a posto", "Non ho capito"]`;
 
-DATI DI CONTESTO UTENTE:
-- Fascia oraria attuale: ${timeOfDay}
-- Luogo attuale: ${locationContext}
-${targetAlertInstruction}
-
-Usa uno stile di conversazione spontaneo, naturale, a volte emotivo.
-Tieni conto dello storico delle risposte passate per allinearti al tono dell'utente:
-${historyContext}
-
-Devi rispondere ESCLUSIVAMENTE con un array JSON contenente esattamente 3 stringhe. Esempio: ["Sì, volentieri", "No, grazie", "Non ho capito"]`;
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
     const requestBody = {
         contents: [
