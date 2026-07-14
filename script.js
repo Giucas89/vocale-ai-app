@@ -452,6 +452,7 @@ function getEmergencyConfig() {
     return saved ? JSON.parse(saved) : defaultEmergencies;
 }
 
+// Emergency buttons renderer
 function renderEmergencyFooter() {
     const config = getEmergencyConfig();
     emergencyBar.innerHTML = ''; // Clear
@@ -894,3 +895,11 @@ function updateSuggestions(options) {
         btn.onclick = () => speak(text);
     });
 }
+
+// Resize handler to ensure visualizer canvas resolution matches layout
+window.addEventListener('resize', () => {
+    if (isListening && visualizerCanvas) {
+        visualizerCanvas.width = visualizerCanvas.offsetWidth;
+        visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    }
+});
