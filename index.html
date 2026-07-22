@@ -14,15 +14,30 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%22180%22 height=%22180%22 fill=%22none%22 stroke=%22%2306b6d4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z%22/><path d=%22M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z%22/></svg>">
     
     <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts for modern typography -->
+    <!-- Google Fonts & Material Symbols (Stitch Design System) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible+Next:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <header class="app-header">
-        <h1 class="logo">Vocale <span class="accent">AI</span></h1>
+        <div class="header-left">
+            <span class="material-symbols-outlined logo-icon">graphic_eq</span>
+            <div class="logo-wrapper">
+                <h1 class="logo">Vocale <span class="accent">AI</span></h1>
+                <div id="status" class="status-subtext">Caricamento in corso...</div>
+            </div>
+        </div>
+        
+        <!-- Context status pill (Stitch style) -->
+        <div id="heard-box" class="heard-box hidden">
+            <span class="heard-label">Ascoltato:</span>
+            <span id="heard-text" class="heard-text">...</span>
+            <canvas id="audio-visualizer" width="80" height="20"></canvas>
+        </div>
+        
         <button id="settings-open-btn" class="icon-btn" aria-label="Apri impostazioni">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
@@ -32,20 +47,6 @@
     </header>
 
     <main class="container">
-        <!-- Status Display -->
-        <section class="status-panel" id="status-panel">
-            <div id="status" class="status-text">Imposta la chiave API per iniziare</div>
-            
-            <!-- Real-time Audio Wave Visualizer -->
-            <canvas id="audio-visualizer" width="300" height="40"></canvas>
-            
-            <div id="heard-box" class="heard-box hidden">
-                <span class="heard-label">Ascoltato:</span>
-                <span id="heard-text" class="heard-text">...</span>
-            </div>
-        </section>
-
-        <!-- Central Layout: Grid & Manual Mic -->
         <section class="interaction-area">
             <div class="grid-layout">
                 <!-- Predictive Buttons (Populated by JS) -->
@@ -64,15 +65,15 @@
                 
                 <!-- Custom Option Button -->
                 <button id="custom-btn" class="suggestion-btn custom-option">
-                    <span class="btn-num">⌨️</span>
+                    <span class="material-symbols-outlined btn-icon text-primary">keyboard</span>
                     <span class="btn-text">Scrivi altro...</span>
                 </button>
             </div>
 
-            <!-- Giant Microphone Button (Shown in manual mode or as toggle) -->
+            <!-- Central Microphone Button -->
             <div class="mic-container">
                 <button id="mic-btn" aria-label="Attiva microfono" class="mic-pulse-btn">
-                    <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
                         <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                         <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                     </svg>
@@ -99,6 +100,12 @@
                     <label for="api-key-input">Gemini API Key</label>
                     <input type="password" id="api-key-input" placeholder="Inserisci la tua API Key...">
                     <small>La chiave viene salvata localmente sul tuo dispositivo.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="instructions-input">Profilo Utente / Istruzioni IA</label>
+                    <textarea id="instructions-input" placeholder="Es. 'Sono un ragazzo di 20 anni, rispondi con uno stile molto informale e giovanile' oppure 'Usa un tono professionale e formale'..." rows="2"></textarea>
+                    <small>Aiuta Gemini ad adattare le risposte alla tua personalità e alle tue esigenze.</small>
                 </div>
 
                 <div class="form-row">

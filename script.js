@@ -6,6 +6,7 @@ let apiKey = localStorage.getItem('vocale_api_key') || '';
 let username = localStorage.getItem('vocale_username') || '';
 let locationContext = localStorage.getItem('vocale_location') || 'Generico';
 let modelId = localStorage.getItem('vocale_model_id') || 'gemini-3.1-flash-lite';
+let aiInstructions = localStorage.getItem('vocale_ai_instructions') || '';
 
 // DOM Elements
 const micBtn = document.getElementById('mic-btn');
@@ -28,6 +29,7 @@ const settingsOpenBtn = document.getElementById('settings-open-btn');
 const settingsCloseBtn = document.getElementById('settings-close-btn');
 const settingsSaveBtn = document.getElementById('settings-save-btn');
 const apiKeyInput = document.getElementById('api-key-input');
+const instructionsInput = document.getElementById('instructions-input');
 const usernameInput = document.getElementById('username-input');
 const locationSelect = document.getElementById('location-select');
 const listeningModeSelect = document.getElementById('listening-mode-select');
@@ -278,6 +280,7 @@ voicePitch.addEventListener('input', () => pitchVal.textContent = voicePitch.val
 // Open Settings
 settingsOpenBtn.addEventListener('click', () => {
     apiKeyInput.value = localStorage.getItem('vocale_api_key') || '';
+    instructionsInput.value = localStorage.getItem('vocale_ai_instructions') || '';
     usernameInput.value = localStorage.getItem('vocale_username') || '';
     locationSelect.value = localStorage.getItem('vocale_location') || 'Generico';
     listeningModeSelect.value = localStorage.getItem('vocale_listening_mode') || 'manual';
@@ -299,12 +302,14 @@ settingsCloseBtn.addEventListener('click', () => settingsModal.classList.add('hi
 // Save Settings
 settingsSaveBtn.addEventListener('click', () => {
     apiKey = apiKeyInput.value.trim();
+    aiInstructions = instructionsInput.value.trim();
     username = usernameInput.value.trim();
     locationContext = locationSelect.value;
     listeningMode = listeningModeSelect.value;
     modelId = modelSelect.value;
     
     localStorage.setItem('vocale_api_key', apiKey);
+    localStorage.setItem('vocale_ai_instructions', aiInstructions);
     localStorage.setItem('vocale_username', username);
     localStorage.setItem('vocale_location', locationContext);
     localStorage.setItem('vocale_listening_mode', listeningMode);
@@ -749,6 +754,12 @@ function stopVisualizer() {
 function drawRealTimeWave() {
     if (!isListening) return;
     
+    // Auto-resize bounds if canvas became visible or layout shifted
+    if (visualizerCanvas.offsetWidth > 0 && visualizerCanvas.width !== visualizerCanvas.offsetWidth) {
+        visualizerCanvas.width = visualizerCanvas.offsetWidth;
+        visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    }
+    
     animationId = requestAnimationFrame(drawRealTimeWave);
     
     analyser.getByteTimeDomainData(dataArray);
@@ -787,6 +798,12 @@ function drawRealTimeWave() {
 let simulatedPhase = 0;
 function drawSimulatedWave() {
     if (!isListening) return;
+    
+    // Auto-resize bounds if canvas became visible or layout shifted
+    if (visualizerCanvas.offsetWidth > 0 && visualizerCanvas.width !== visualizerCanvas.offsetWidth) {
+        visualizerCanvas.width = visualizerCanvas.offsetWidth;
+        visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    }
     
     animationId = requestAnimationFrame(drawSimulatedWave);
     
@@ -876,17 +893,29 @@ async function processSpeechContext(text, userDirectlyAddressed = false) {
     
     let targetAlertInstruction = "";
     if (userDirectlyAddressed) {
-        targetAlertInstruction = " ATTENZIONE: l'interlocutore ha chiamato l'utente per nome; dai priorità a risposte dirette o saluti.";
+        targetAlertInstruction = " ATTENZIONE: l'interlocutore ha chiamato l'utente direttamente per nome; una delle 3 opzioni deve rispondere direttamente o salutare.";
     }
 
-    const systemPrompt = `Motore CAA per muto. Rispondi al contesto con 3 opzioni in italiano, brevi (1-4 parole), naturali ed empatiche.
-Dati utente: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
-Espressioni più frequenti e preferite dall'utente (adattati a questo stile): ${preferredContext}.
+    const userProfileInstruction = aiInstructions 
+        ? `Profilo e preferenze di comunicazione dell'utente (personalizza lessico e stile in base a questo): "${aiInstructions}"`
+        : 'Stile di default: Neutro, amichevole ed educato.';
 
-Cronologia degli ultimi scambi della conversazione (usa questo contesto per rispondere in modo coerente):
+    const systemPrompt = `Sei un Facilitatore Conversazionale Avanzato per un utente non-verbale che comunica tramite CAA.
+L'utente sta ascoltando una conversazione che avviene nell'ambiente circostante (può coinvolgere più persone che parlano tra loro o che si rivolgono a lui). Il tuo compito è suggerire 3 frasi in italiano, brevi (1-5 parole), naturali ed empatiche, che permettano all'utente di inserirsi attivamente e con naturalezza nel discorso.
+
+Istruzioni per diversificare le 3 opzioni (Devono coprire diversi scopi comunicativi per arricchire la conversazione):
+- Opzione 1 (Commento / Assenso / Dissenso): Esprimi un'opinione rapida o accordo/disaccordo rispetto al discorso udito (es. "Sono d'accordo", "Secondo me no", "Che bello!").
+- Opzione 2 (Domanda / Interazione): Rilancia il discorso o chiedi chiarimenti (es. "Davvero?", "Chi l'ha detto?", "Puoi spiegare?").
+- Opzione 3 (Iniziativa / Bisogno / Proposta): Prendi l'iniziativa, proponi qualcosa, fai una battuta o esprimi un bisogno (es. "Vorrei dire una cosa", "Cambiamo discorso", "Ho fame").
+
+Istruzioni speciali:
+- Analizza l'intera cronologia della conversazione per comprendere il filo logico:
 ${chatHistoryContext}
+- Adattati allo stile e alle frasi preferite dell'utente: ${preferredContext}.
+- ${userProfileInstruction}
+- Dati ambientali: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
 
-Rispondi SOLO con array JSON di 3 stringhe. Es: ["Sì, grazie", "No, a posto", "Non ho capito"]`;
+Rispondi SOLO con un array JSON di 3 stringhe in formato: ["Opzione 1", "Opzione 2", "Opzione 3"]`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
@@ -908,8 +937,8 @@ Rispondi SOLO con array JSON di 3 stringhe. Es: ["Sì, grazie", "No, a posto", "
                     type: "string"
                 }
             },
-            temperature: 0.3, // Lower temperature speeds up calculations and increases formatting strictness
-            maxOutputTokens: 80 // Restricting output length limits search space and saves processing time
+            temperature: 0.45, // Balanced temperature for natural, context-rich conversations
+            maxOutputTokens: 100 // Slightly increased output tokens limit to support 5-word phrases and visual indicators
         }
     };
 
@@ -943,11 +972,75 @@ Rispondi SOLO con array JSON di 3 stringhe. Es: ["Sì, grazie", "No, a posto", "
     }
 }
 
+// Material Symbols Mapping (from Stitch Design System)
+const materialIconMapping = {
+    'si': 'thumb_up',
+    'no': 'thumb_down',
+    'grazie': 'volunteer_activism',
+    'per favore': 'potted_plant',
+    'aiuto': 'emergency',
+    'bagno': 'wc',
+    'acqua': 'local_drink',
+    'caffe': 'coffee',
+    'caffè': 'coffee',
+    'cibo': 'restaurant',
+    'fame': 'restaurant',
+    'sete': 'local_drink',
+    'dolore': 'medical_services',
+    'medico': 'health_and_safety',
+    'letto': 'bed',
+    'dormire': 'bedtime',
+    'mangiare': 'restaurant',
+    'bere': 'local_drink',
+    'andare': 'directions_walk',
+    'parlare': 'forum',
+    'stanco': 'bedtime',
+    'caldo': 'light_mode',
+    'freddo': 'ac_unit',
+    'bene': 'sentiment_satisfied',
+    'male': 'sentiment_dissatisfied',
+    'casa': 'home',
+    'fuori': 'forest',
+    'ciao': 'waving_hand',
+    'buongiorno': 'light_mode',
+    'buonasera': 'dark_mode'
+};
+
+function getMaterialIconForText(text) {
+    if (!text) return '';
+    const cleanText = text.toLowerCase().trim();
+    if (materialIconMapping[cleanText]) return materialIconMapping[cleanText];
+    for (const [key, icon] of Object.entries(materialIconMapping)) {
+        if (cleanText.includes(key)) {
+            return icon;
+        }
+    }
+    return '';
+}
+
 function updateSuggestions(options) {
     suggestBtns.forEach((btn, index) => {
         const text = options[index];
         btn.disabled = false;
         btn.classList.remove('empty');
+        
+        // Find matching icon
+        const iconName = getMaterialIconForText(text);
+        
+        // Remove previous icon if it exists
+        const existingIcon = btn.querySelector('.btn-icon');
+        if (existingIcon) {
+            existingIcon.remove();
+        }
+        
+        // Inject new Material Icon if matched
+        if (iconName) {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'material-symbols-outlined btn-icon';
+            iconSpan.textContent = iconName;
+            btn.insertBefore(iconSpan, btn.querySelector('.btn-text'));
+        }
+        
         btn.querySelector('.btn-text').textContent = text;
         btn.onclick = () => speak(text);
     });
