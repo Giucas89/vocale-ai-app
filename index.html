@@ -38,15 +38,42 @@
             <canvas id="audio-visualizer" width="80" height="20"></canvas>
         </div>
         
-        <button id="settings-open-btn" class="icon-btn" aria-label="Apri impostazioni">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-        </button>
+        <div class="header-right">
+            <!-- Network status badge -->
+            <div id="network-badge" class="network-badge online" title="Stato Rete: Online (Gemini)">
+                <span class="badge-dot"></span>
+                <span class="badge-text">Online</span>
+            </div>
+            
+            <button id="history-open-btn" class="icon-btn" aria-label="Cronologia dialoghi" title="Cronologia dialoghi">
+                <span class="material-symbols-outlined">history</span>
+            </button>
+
+            <button id="settings-open-btn" class="icon-btn" aria-label="Apri impostazioni" title="Impostazioni">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
     </header>
 
     <main class="container">
+        <!-- Quick Tone Selector & Regenerate Actions -->
+        <div class="tone-bar-container">
+            <div class="tone-pills" id="tone-pills" role="radiogroup" aria-label="Tono conversazionale">
+                <button class="tone-pill active" data-tone="informale" role="radio" aria-checked="true">💬 Informale</button>
+                <button class="tone-pill" data-tone="formale" role="radio" aria-checked="false">👔 Formale</button>
+                <button class="tone-pill" data-tone="scherzoso" role="radio" aria-checked="false">🎭 Scherzoso</button>
+                <button class="tone-pill" data-tone="sintetico" role="radio" aria-checked="false">⚡ Sintetico</button>
+            </div>
+            
+            <button id="regen-btn" class="regen-btn" aria-label="Altre opzioni di risposta" title="Rigenera 3 risposte alternative">
+                <span class="material-symbols-outlined regen-icon">refresh</span>
+                <span class="regen-text">Altre opzioni</span>
+            </button>
+        </div>
+
         <section class="interaction-area">
             <div class="grid-layout">
                 <!-- Predictive Buttons (Populated by JS) -->
@@ -135,15 +162,20 @@
                     <div class="form-group half">
                         <label for="model-select">Modello IA</label>
                         <select id="model-select">
-                            <option value="gemini-3.1-flash-lite">3.1 Flash-Lite (Veloce)</option>
-                            <option value="gemini-3.5-flash">3.5 Flash (Bilanciato)</option>
-                            <option value="gemini-2.5-flash">2.5 Flash (Legacy)</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Ultra Veloce ⚡)</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Bilanciato 🚀)</option>
+                            <option value="gemini-flash-lite-latest">Gemini Flash-Lite Latest (Sempre Aggiornato)</option>
+                            <option value="gemini-flash-latest">Gemini Flash Latest (Sempre Aggiornato)</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stabile)</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="voice-select">Voce Sintesi Vocale (TTS)</label>
+                <div class="form-group voice-group">
+                    <div class="voice-label-row">
+                        <label for="voice-select">Voce Sintesi Vocale (TTS)</label>
+                        <button type="button" id="voice-preview-btn" class="mini-action-btn">🔊 Prova voce</button>
+                    </div>
                     <select id="voice-select">
                         <!-- Populated by JS -->
                     </select>
@@ -184,12 +216,37 @@
                 </div>
 
                 <div class="form-group danger-zone">
-                    <h3>Dati & Memoria</h3>
+                    <h3>Dati & Backup</h3>
+                    <div class="backup-actions-row">
+                        <button type="button" id="export-backup-btn" class="secondary-btn">📥 Esporta Backup (JSON)</button>
+                        <button type="button" id="import-backup-btn" class="secondary-btn">📤 Importa Backup (JSON)</button>
+                        <input type="file" id="import-backup-file" accept=".json" style="display: none;">
+                    </div>
                     <button id="clear-memory-btn" class="secondary-btn danger">Cancella cronologia risposte</button>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="settings-save-btn" class="primary-btn">Salva Impostazioni</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONVERSATION HISTORY MODAL -->
+    <div id="history-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="history-title">
+        <div class="modal-content history-modal-content">
+            <div class="modal-header">
+                <div class="header-title-wrapper">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    <h2 id="history-title">Cronologia Dialoghi</h2>
+                </div>
+                <button id="history-close-btn" class="close-btn" aria-label="Chiudi cronologia">&times;</button>
+            </div>
+            <div class="modal-body history-body" id="history-chat-log">
+                <!-- Populated dynamically by JS -->
+            </div>
+            <div class="modal-footer history-footer">
+                <button id="history-clear-btn" class="secondary-btn danger">Pulisci</button>
+                <button id="history-done-btn" class="primary-btn">Chiudi</button>
             </div>
         </div>
     </div>
