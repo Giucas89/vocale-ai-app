@@ -1,35 +1,35 @@
 /* ==========================================================================
-   Vocale AI - Mobile-First Redesign System (Optimized for iPhone 13+)
+   Vocale AI - iOS Minimalist Cupertino Design System (iPhone 13+ Optimized)
    ========================================================================== */
 
 :root {
-    /* Color Palette */
-    --bg-main: #0b0f19;
-    --bg-card: #161e2e;
-    --bg-card-hover: #1e293b;
-    --bg-header: rgba(11, 15, 25, 0.94);
+    /* iOS System Colors & Frosted Glass */
+    --bg-main: #000000;
+    --bg-card: rgba(28, 28, 30, 0.82);
+    --bg-card-hover: rgba(44, 44, 46, 0.95);
+    --bg-header: rgba(18, 18, 20, 0.85);
     
-    /* Text colors */
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --text-muted: #636366;
     
-    /* Neon Accents & Glows */
-    --accent-cyan: #06b6d4;
-    --accent-cyan-glow: rgba(6, 182, 212, 0.3);
-    --accent-yellow: #f59e0b;
-    --accent-yellow-glow: rgba(245, 158, 11, 0.25);
-    --accent-red: #ef4444;
-    --accent-red-glow: rgba(239, 68, 68, 0.3);
+    /* Apple System Accent Colors */
+    --accent-cyan: #0a84ff; /* Apple Azure Blue */
+    --accent-cyan-glow: rgba(10, 132, 255, 0.3);
+    --accent-yellow: #ffd60a; /* Apple Amber Yellow */
+    --accent-yellow-glow: rgba(255, 214, 10, 0.25);
+    --accent-red: #ff453a; /* Apple System Red */
+    --accent-red-glow: rgba(255, 69, 58, 0.3);
     
-    /* Fonts & Tokens */
-    --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.5);
-    --shadow-neon: 0 0 20px rgba(6, 182, 212, 0.35);
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Typography & Depth */
+    --font-main: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --shadow-card: 0 8px 24px -6px rgba(0, 0, 0, 0.7);
+    --shadow-neon: 0 0 20px rgba(10, 132, 255, 0.35);
+    --transition-smooth: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Reset and iOS Safe Base */
+/* Reset and iOS Base */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -44,7 +44,7 @@ html, body {
     height: -webkit-fill-available;
     overflow: hidden;
     background-color: var(--bg-main);
-    background-image: radial-gradient(circle at 50% -10%, #1e293b 0%, var(--bg-main) 65%);
+    background-image: radial-gradient(circle at 50% -15%, #1c1c1e 0%, #000000 70%);
     color: var(--text-primary);
     font-family: var(--font-main);
     display: flex;
@@ -53,15 +53,15 @@ html, body {
 }
 
 /* ==========================================================================
-   1. Compact Header (Clean, Zero Collision)
+   1. Compact iOS Header (Safe Area Top & Frosted Acrylic)
    ========================================================================== */
 .app-header {
     height: calc(48px + env(safe-area-inset-top, 0px));
     padding: env(safe-area-inset-top, 0px) 16px 0 16px;
     background-color: var(--bg-header);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -80,7 +80,6 @@ html, body {
 .logo-icon {
     font-size: 1.6rem;
     color: var(--accent-cyan);
-    text-shadow: 0 0 10px var(--accent-cyan-glow);
     flex-shrink: 0;
 }
 
@@ -92,7 +91,7 @@ html, body {
 
 .logo {
     font-size: 1.15rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.1;
     white-space: nowrap;
@@ -124,26 +123,26 @@ html, body {
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 20px;
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .network-badge.online {
-    color: #4ade80;
-    border-color: rgba(74, 222, 128, 0.3);
-    background: rgba(74, 222, 128, 0.08);
+    color: #30d158;
+    border-color: rgba(48, 209, 88, 0.3);
+    background: rgba(48, 209, 88, 0.1);
 }
 
 .network-badge.offline {
-    color: #fb923c;
-    border-color: rgba(251, 146, 60, 0.3);
-    background: rgba(251, 146, 60, 0.08);
+    color: #ff9f0a;
+    border-color: rgba(255, 159, 10, 0.3);
+    background: rgba(255, 159, 10, 0.1);
 }
 
 .badge-dot {
@@ -155,9 +154,9 @@ html, body {
 }
 
 .icon-btn {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
     cursor: pointer;
     width: 34px;
     height: 34px;
@@ -171,12 +170,7 @@ html, body {
 
 .icon-btn:active {
     transform: scale(0.92);
-}
-
-.icon-btn:hover {
-    color: var(--text-primary);
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: var(--accent-cyan);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .icon-btn .material-symbols-outlined {
@@ -197,20 +191,21 @@ html, body {
 }
 
 /* ==========================================================================
-   3. Live Speech Context Card
+   3. Live Speech Context Card (Frosted Glass Cupertino Panel)
    ========================================================================== */
 .heard-card {
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
     padding: 8px 12px;
     display: flex;
     flex-direction: column;
     gap: 3px;
     flex-shrink: 0;
     transition: var(--transition-smooth);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-card);
 }
 
 .heard-card-top {
@@ -262,26 +257,26 @@ html, body {
     text-overflow: ellipsis;
 }
 
-/* User Name Alert Highlight */
+/* Mention Alert */
 @keyframes alert-card-pulse {
     0%, 100% {
-        box-shadow: 0 0 6px var(--accent-yellow-glow);
-        border-color: rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 8px var(--accent-yellow-glow);
+        border-color: rgba(255, 214, 10, 0.4);
     }
     50% {
-        box-shadow: 0 0 16px var(--accent-yellow), 0 0 8px var(--accent-yellow-glow);
+        box-shadow: 0 0 18px var(--accent-yellow), 0 0 8px var(--accent-yellow-glow);
         border-color: var(--accent-yellow);
     }
 }
 
 .heard-card.alert-glow {
     animation: alert-card-pulse 1.4s infinite ease-in-out;
-    background: rgba(245, 158, 11, 0.08) !important;
+    background: rgba(255, 214, 10, 0.12) !important;
     border-color: var(--accent-yellow) !important;
 }
 
 /* ==========================================================================
-   4. Quick Tone Selector & Regenerate Bar
+   4. iOS-Style Segmented Tone Pills & Action Bar
    ========================================================================== */
 .tone-bar-container {
     display: flex;
@@ -295,13 +290,16 @@ html, body {
 .tone-pills {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     overflow-x: auto;
-    padding: 1px 0;
+    padding: 2px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     flex: 1;
     min-width: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tone-pills::-webkit-scrollbar {
@@ -309,11 +307,11 @@ html, body {
 }
 
 .tone-pill {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    border: none;
     color: var(--text-secondary);
     border-radius: 100px;
-    padding: 5px 10px;
+    padding: 5px 11px;
     font-size: 0.76rem;
     font-weight: 600;
     white-space: nowrap;
@@ -324,26 +322,24 @@ html, body {
 }
 
 .tone-pill:hover {
-    background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary);
 }
 
 .tone-pill.active {
-    background: rgba(6, 182, 212, 0.16);
-    border-color: var(--accent-cyan);
-    color: var(--accent-cyan);
-    box-shadow: 0 0 10px var(--accent-cyan-glow);
+    background: var(--accent-cyan);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.4);
 }
 
 .regen-btn {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
     border-radius: 100px;
-    padding: 5px 10px;
+    padding: 5px 11px;
     font-size: 0.76rem;
     font-weight: 600;
     cursor: pointer;
@@ -353,23 +349,17 @@ html, body {
     font-family: var(--font-main);
 }
 
-.regen-btn:hover {
-    background: rgba(6, 182, 212, 0.12);
-    border-color: var(--accent-cyan);
-    color: var(--accent-cyan);
-}
-
 .regen-btn:active .regen-icon {
     transform: rotate(180deg);
 }
 
 .regen-icon {
     font-size: 1rem;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* ==========================================================================
-   5. Interaction Area & Flexible 2x2 Grid
+   5. Interaction Area & 2x2 Squircle Cards
    ========================================================================== */
 .interaction-area {
     flex: 1;
@@ -390,8 +380,8 @@ html, body {
 
 .suggestion-btn {
     background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
     color: var(--text-primary);
     cursor: pointer;
     display: flex;
@@ -407,54 +397,51 @@ html, body {
     flex: 1;
     min-height: 0;
     font-family: var(--font-main);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
 }
 
 .suggestion-btn:not(.empty):active {
-    transform: scale(0.97);
-    filter: brightness(0.9);
+    transform: scale(0.96);
+    background-color: var(--bg-card-hover);
 }
 
 .suggestion-btn:not(.empty):hover {
     background-color: var(--bg-card-hover);
-    border-color: var(--accent-cyan);
-    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+    border-color: rgba(10, 132, 255, 0.5);
 }
 
 .suggestion-btn.empty {
     border-style: dashed;
-    border-color: rgba(255, 255, 255, 0.12);
-    background-color: rgba(30, 41, 59, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(28, 28, 30, 0.4);
     color: var(--text-muted);
     cursor: not-allowed;
 }
 
 .suggestion-btn.custom-option {
-    border-color: rgba(6, 182, 212, 0.4);
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, var(--bg-card) 100%);
+    border-color: rgba(10, 132, 255, 0.4);
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(28, 28, 30, 0.9) 100%);
 }
 
 .suggestion-btn.custom-option:hover {
     border-color: var(--accent-cyan);
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, var(--bg-card-hover) 100%);
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.18) 0%, var(--bg-card-hover) 100%);
 }
 
 .btn-icon {
     font-size: clamp(1.6rem, 4.8vw, 2.2rem);
     line-height: 1;
-    color: var(--text-secondary);
+    color: var(--accent-cyan);
     transition: var(--transition-smooth);
     margin-bottom: 2px;
 }
 
-.suggestion-btn:hover .btn-icon {
-    color: var(--accent-cyan);
-}
-
 .btn-num {
     font-size: 0.72rem;
-    font-weight: 800;
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-weight: 700;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     width: 20px;
     height: 20px;
     display: flex;
@@ -470,7 +457,7 @@ html, body {
 
 .suggestion-btn:hover .btn-num {
     background-color: var(--accent-cyan);
-    color: var(--bg-main);
+    color: #ffffff;
     border-color: var(--accent-cyan);
 }
 
@@ -490,7 +477,7 @@ html, body {
 }
 
 /* ==========================================================================
-   6. Ergonomic Microphone Section
+   6. Apple Siri-Inspired Microphone
    ========================================================================== */
 .mic-container {
     display: flex;
@@ -505,15 +492,15 @@ html, body {
     width: clamp(64px, 15vw, 76px);
     height: clamp(64px, 15vw, 76px);
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-cyan) 0%, #0891b2 100%);
-    color: var(--bg-main);
+    background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+    color: #ffffff;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: var(--transition-smooth);
-    box-shadow: var(--shadow-neon);
+    box-shadow: 0 4px 20px rgba(10, 132, 255, 0.4);
     position: relative;
     flex-shrink: 0;
 }
@@ -527,18 +514,18 @@ html, body {
     transform: scale(0.92);
 }
 
-/* Wave rings animation for mic recording state */
+/* Wave rings animation */
 @keyframes mic-wave-rings {
     0% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6), 0 0 0 6px rgba(239, 68, 68, 0.4);
+        box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.6), 0 0 0 6px rgba(255, 69, 58, 0.4);
     }
     100% {
-        box-shadow: 0 0 0 16px rgba(239, 68, 68, 0), 0 0 0 30px rgba(239, 68, 68, 0);
+        box-shadow: 0 0 0 16px rgba(255, 69, 58, 0), 0 0 0 30px rgba(255, 69, 58, 0);
     }
 }
 
 .mic-pulse-btn.listening {
-    background: linear-gradient(135deg, var(--accent-red) 0%, #dc2626 100%);
+    background: linear-gradient(135deg, var(--accent-red) 0%, #d70015 100%);
     color: #ffffff;
     animation: mic-wave-rings 1.6s infinite cubic-bezier(0.25, 0, 0, 1);
 }
@@ -552,7 +539,7 @@ html, body {
 }
 
 /* ==========================================================================
-   7. Emergency Footer Bar (iOS Home Bar Safe)
+   7. Docked Emergency Bar (Cupertino Rounded Buttons)
    ========================================================================== */
 .emergency-bar {
     display: grid;
@@ -560,9 +547,9 @@ html, body {
     gap: 6px;
     padding: 6px 12px calc(env(safe-area-inset-bottom, 0px) + 6px);
     background-color: var(--bg-header);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 20;
     flex-shrink: 0;
 }
@@ -571,9 +558,9 @@ html, body {
     height: clamp(42px, 10vw, 50px);
     font-size: clamp(0.75rem, 2.4vw, 0.88rem);
     font-weight: 700;
-    border-radius: 12px;
-    border: 1px solid rgba(245, 158, 11, 0.35);
-    background-color: rgba(245, 158, 11, 0.08);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 214, 10, 0.3);
+    background-color: rgba(255, 214, 10, 0.08);
     color: var(--accent-yellow);
     cursor: pointer;
     transition: var(--transition-smooth);
@@ -593,23 +580,21 @@ html, body {
 }
 
 .emergency-btn:hover {
-    background-color: rgba(245, 158, 11, 0.16);
-    border-color: var(--accent-yellow);
+    background-color: rgba(255, 214, 10, 0.16);
 }
 
 .emergency-btn.help {
-    border-color: rgba(239, 68, 68, 0.45);
-    background-color: rgba(239, 68, 68, 0.12);
-    color: #fca5a5;
+    border-color: rgba(255, 69, 58, 0.4);
+    background-color: rgba(255, 69, 58, 0.12);
+    color: #ff453a;
 }
 
 .emergency-btn.help:hover {
-    background-color: rgba(239, 68, 68, 0.22);
-    border-color: var(--accent-red);
+    background-color: rgba(255, 69, 58, 0.22);
 }
 
 /* ==========================================================================
-   8. Modals System (iOS Touch & Backdrop Blur)
+   8. Modals System (iOS Acrylic Sheets)
    ========================================================================== */
 .modal-overlay {
     position: fixed;
@@ -617,9 +602,9 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(7, 10, 18, 0.7);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -634,11 +619,11 @@ html, body {
 }
 
 .modal-content {
-    background-color: #131c2e;
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(6, 182, 212, 0.3);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), var(--shadow-neon);
+    background-color: rgba(28, 28, 30, 0.95);
+    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(35px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
     border-radius: 22px;
     width: 100%;
     max-width: 460px;
@@ -656,7 +641,7 @@ html, body {
 
 .modal-header {
     padding: 16px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -665,18 +650,18 @@ html, body {
 
 .modal-header h2 {
     font-size: 1.3rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .close-btn {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
     color: var(--text-secondary);
     font-size: 1.4rem;
     cursor: pointer;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -686,7 +671,7 @@ html, body {
 
 .close-btn:hover {
     color: var(--text-primary);
-    border-color: var(--accent-cyan);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .modal-body {
@@ -716,11 +701,11 @@ html, body {
 .form-group input[type="text"],
 .form-group select,
 .modal-body textarea {
-    background-color: rgba(9, 13, 22, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 12px 14px;
-    font-size: 16px; /* Prevents auto-zoom on iOS */
+    font-size: 16px;
     color: var(--text-primary);
     font-family: var(--font-main);
     transition: var(--transition-smooth);
@@ -750,7 +735,6 @@ html, body {
     flex: 1;
 }
 
-/* Voice Preview Button */
 .voice-label-row {
     display: flex;
     justify-content: space-between;
@@ -758,8 +742,8 @@ html, body {
 }
 
 .mini-action-btn {
-    background: rgba(6, 182, 212, 0.12);
-    border: 1px solid rgba(6, 182, 212, 0.3);
+    background: rgba(10, 132, 255, 0.15);
+    border: 1px solid rgba(10, 132, 255, 0.3);
     color: var(--accent-cyan);
     border-radius: 20px;
     padding: 3px 10px;
@@ -772,16 +756,15 @@ html, body {
 
 .mini-action-btn:hover {
     background: var(--accent-cyan);
-    color: var(--bg-main);
+    color: #ffffff;
 }
 
-/* Sliders */
 .form-group input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
     height: 6px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     outline: none;
     margin: 8px 0;
 }
@@ -792,14 +775,13 @@ html, body {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--accent-cyan);
+    background: #ffffff;
     cursor: pointer;
-    box-shadow: 0 0 8px var(--accent-cyan-glow);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Emergency Shortcuts Config */
 .emergency-config-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 14px;
     display: flex;
     flex-direction: column;
@@ -820,7 +802,7 @@ html, body {
 .em-input-txt { flex: 3; }
 
 .danger-zone {
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 14px;
 }
 
@@ -843,10 +825,9 @@ html, body {
     text-align: center;
 }
 
-/* Modal Footer & Buttons */
 .modal-footer {
     padding: 14px 18px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -854,8 +835,8 @@ html, body {
 }
 
 .primary-btn {
-    background: linear-gradient(135deg, var(--accent-cyan) 0%, #0891b2 100%);
-    color: var(--bg-main);
+    background: var(--accent-cyan);
+    color: #ffffff;
     border: none;
     border-radius: 12px;
     padding: 12px 22px;
@@ -863,22 +844,22 @@ html, body {
     font-weight: 700;
     cursor: pointer;
     transition: var(--transition-smooth);
-    box-shadow: 0 4px 12px var(--accent-cyan-glow);
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
     font-family: var(--font-main);
 }
 
 .primary-btn:hover {
-    box-shadow: 0 6px 18px var(--accent-cyan);
+    box-shadow: 0 6px 18px rgba(10, 132, 255, 0.5);
 }
 
 .primary-btn.speak {
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, #d97706 100%);
-    color: #ffffff;
+    background: linear-gradient(135deg, #ffd60a 0%, #ff9f0a 100%);
+    color: #000000;
 }
 
 .secondary-btn {
     background-color: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: var(--text-primary);
     border-radius: 12px;
     padding: 12px 20px;
@@ -890,12 +871,12 @@ html, body {
 }
 
 .secondary-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .secondary-btn.danger {
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #fca5a5;
+    border-color: rgba(255, 69, 58, 0.4);
+    color: #ff453a;
 }
 
 /* History Modal */
@@ -943,21 +924,21 @@ html, body {
 
 .chat-bubble {
     padding: 10px 14px;
-    border-radius: 14px;
+    border-radius: 16px;
     font-size: 0.9rem;
     line-height: 1.35;
     word-break: break-word;
 }
 
 .chat-turn.interlocutore .chat-bubble {
-    background-color: var(--bg-card);
+    background-color: rgba(44, 44, 46, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-bottom-left-radius: 4px;
 }
 
 .chat-turn.utente .chat-bubble {
-    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
-    color: #042f2e;
+    background: var(--accent-cyan);
+    color: #ffffff;
     font-weight: 600;
     border-bottom-right-radius: 4px;
 }
@@ -997,8 +978,8 @@ html, body {
 }
 
 .word-pill {
-    background-color: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
     border-radius: 16px;
     padding: 8px 6px;
@@ -1010,15 +991,13 @@ html, body {
 }
 
 .word-pill:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.12);
     border-color: var(--accent-cyan);
 }
 
 /* ==========================================================================
    9. Media Queries: Landscape & Tablet
    ========================================================================== */
-
-/* Landscape Mode */
 @media (max-height: 520px) and (orientation: landscape) {
     .app-header {
         height: calc(42px + env(safe-area-inset-top, 0px));
@@ -1072,7 +1051,6 @@ html, body {
     }
 }
 
-/* Tablet & Desktop Screens */
 @media (min-width: 768px) {
     .container {
         max-width: 1100px;

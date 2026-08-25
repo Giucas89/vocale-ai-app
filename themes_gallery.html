@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Vocale AI - Galleria 10 Design Stitch (iPhone 13+)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #07090e;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Theme Selector Bar */
+        .showcase-header {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .showcase-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .showcase-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #38bdf8;
+        }
+
+        .theme-chips-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            max-width: 100%;
+            width: 100%;
+            max-width: 1200px;
+            padding: 4px 0;
+            scrollbar-width: none;
+        }
+        .theme-chips-container::-webkit-scrollbar { display: none; }
+
+        .theme-chip {
+            padding: 8px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .theme-chip:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+
+        .theme-chip.active {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Description bar */
+        .theme-desc-bar {
+            max-width: 1200px;
+            width: 100%;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            text-align: center;
+            min-height: 24px;
+        }
+        .theme-desc-bar strong { color: #f8fafc; }
+
+        /* iPhone Mockup Frame */
+        .phone-wrapper {
+            margin: 20px auto 40px;
+            width: 100%;
+            max-width: 393px;
+            height: 852px;
+            background: #000000;
+            border-radius: 48px;
+            border: 10px solid #27272a;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            width: 115px;
+            height: 26px;
+            background: #000000;
+            border-radius: 20px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+        .dynamic-island .camera {
+            width: 8px;
+            height: 8px;
+            background: #111827;
+            border-radius: 50%;
+            border: 1px solid #1f2937;
+        }
+
+        /* Simulated App Viewport */
+        .app-viewport {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            padding-top: 40px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* THEMES */
+        .theme-1 {
+            --bg-base: #0b0f19;
+            --bg-card: #161e2e;
+            --border-card: rgba(6, 182, 212, 0.35);
+            --glow: 0 0 15px rgba(6, 182, 212, 0.3);
+            --accent: #06b6d4;
+            --accent-text: #06b6d4;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --mic-bg: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            --emergency-bg: rgba(245, 158, 11, 0.1);
+            --emergency-border: rgba(245, 158, 11, 0.4);
+            --emergency-text: #fbbf24;
+            --radius-card: 16px;
+        }
+        .theme-2 {
+            --bg-base: #000000;
+            --bg-card: rgba(28, 28, 30, 0.85);
+            --border-card: rgba(255, 255, 255, 0.12);
+            --glow: none;
+            --accent: #0a84ff;
+            --accent-text: #0a84ff;
+            --text-main: #ffffff;
+            --text-sub: #8e8e93;
+            --mic-bg: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+            --emergency-bg: rgba(255, 255, 255, 0.08);
+            --emergency-border: rgba(255, 255, 255, 0.15);
+            --emergency-text: #ffd60a;
+            --radius-card: 20px;
+        }
+        .theme-3 {
+            --bg-base: #000000;
+            --bg-card: #121212;
+            --border-card: #facc15;
+            --glow: 0 0 0 2px #facc15;
+            --accent: #38bdf8;
+            --accent-text: #facc15;
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+            --mic-bg: #facc15;
+            --emergency-bg: #1e1e1e;
+            --emergency-border: #f87171;
+            --emergency-text: #ffffff;
+            --radius-card: 12px;
+        }
+        .theme-4 {
+            --bg-base: #0f172a;
+            --bg-card: #1e293b;
+            --border-card: rgba(255, 255, 255, 0.05);
+            --glow: 4px 4px 10px #090d16, -4px -4px 10px #233148;
+            --accent: #38bdf8;
+            --accent-text: #38bdf8;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --mic-bg: linear-gradient(145deg, #202d42, #1b2535);
+            --emergency-bg: #1e293b;
+            --emergency-border: rgba(255, 255, 255, 0.08);
+            --emergency-text: #f59e0b;
+            --radius-card: 18px;
+        }
+        .theme-5 {
+            --bg-base: #18181b;
+            --bg-card: #27272a;
+            --border-card: rgba(245, 158, 11, 0.25);
+            --glow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --accent: #f59e0b;
+            --accent-text: #f59e0b;
+            --text-main: #fafaf9;
+            --text-sub: #a1a1aa;
+            --mic-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --emergency-bg: rgba(245, 158, 11, 0.12);
+            --emergency-border: rgba(245, 158, 11, 0.35);
+            --emergency-text: #fef3c7;
+            --radius-card: 16px;
+        }
+        .theme-6 {
+            --bg-base: #0b1120;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --border-card: rgba(168, 85, 247, 0.4);
+            --glow: 0 0 20px rgba(168, 85, 247, 0.25);
+            --accent: #a855f7;
+            --accent-text: #38bdf8;
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+            --mic-bg: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+            --emergency-bg: rgba(236, 72, 153, 0.15);
+            --emergency-border: rgba(236, 72, 153, 0.4);
+            --emergency-text: #fbcfe8;
+            --radius-card: 18px;
+        }
+        .theme-7 {
+            --bg-base: #090d16;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --border-card: rgba(255, 255, 255, 0.15);
+            --glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --accent: #22d3ee;
+            --accent-text: #22d3ee;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --mic-bg: linear-gradient(135deg, rgba(34, 211, 238, 0.8) 0%, rgba(6, 182, 212, 0.9) 100%);
+            --emergency-bg: rgba(255, 255, 255, 0.06);
+            --emergency-border: rgba(255, 255, 255, 0.12);
+            --emergency-text: #fde047;
+            --radius-card: 20px;
+        }
+        .theme-8 {
+            --bg-base: #111827;
+            --bg-card: #1f2937;
+            --border-card: rgba(251, 146, 60, 0.3);
+            --glow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            --accent: #fb923c;
+            --accent-text: #fb923c;
+            --text-main: #ffffff;
+            --text-sub: #9ca3af;
+            --mic-bg: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            --emergency-bg: rgba(251, 146, 60, 0.12);
+            --emergency-border: rgba(251, 146, 60, 0.4);
+            --emergency-text: #ffedd5;
+            --radius-card: 18px;
+        }
+        .theme-9 {
+            --bg-base: #0f172a;
+            --bg-card: #1e293b;
+            --border-card: #06b6d4;
+            --glow: 0 0 10px rgba(6, 182, 212, 0.25);
+            --accent: #06b6d4;
+            --accent-text: #06b6d4;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --mic-bg: #06b6d4;
+            --emergency-bg: rgba(249, 115, 22, 0.15);
+            --emergency-border: #f97316;
+            --emergency-text: #ffedd5;
+            --radius-card: 14px;
+        }
+        .theme-10 {
+            --bg-base: #0e131f;
+            --bg-card: #182234;
+            --border-card: rgba(56, 189, 248, 0.25);
+            --glow: 0 8px 20px -4px rgba(0, 0, 0, 0.6);
+            --accent: #38bdf8;
+            --accent-text: #38bdf8;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --mic-bg: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            --emergency-bg: rgba(245, 158, 11, 0.12);
+            --emergency-border: rgba(245, 158, 11, 0.3);
+            --emergency-text: #fef08a;
+            --radius-card: 16px;
+        }
+
+        .app-viewport {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .mock-header {
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mock-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mock-logo .accent { color: var(--accent); }
+        .mock-header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mock-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .mock-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mock-icon-btn span { font-size: 1.1rem; }
+
+        .mock-container {
+            flex: 1;
+            padding: 10px 14px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .mock-heard-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-card);
+            box-shadow: var(--glow);
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            transition: all 0.3s ease;
+        }
+        .mock-heard-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .mock-heard-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--accent-text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .mock-wave {
+            height: 16px;
+            width: 65px;
+            background: repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 3px, transparent 3px, transparent 6px);
+            border-radius: 4px;
+            opacity: 0.8;
+        }
+        .mock-heard-text {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mock-tone-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .mock-tone-pills {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .mock-tone-pill {
+            padding: 4px 8px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+        .mock-tone-pill.active {
+            background: rgba(6, 182, 212, 0.18);
+            border-color: var(--accent);
+            color: var(--accent-text);
+        }
+        .mock-regen-btn {
+            padding: 4px 8px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .mock-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+        .mock-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-card);
+            box-shadow: var(--glow);
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .mock-card:active { transform: scale(0.97); }
+        .mock-card-icon {
+            font-size: 1.8rem;
+            color: var(--accent-text);
+        }
+        .mock-card-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+        }
+        .mock-card-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .mock-mic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .mock-mic-btn {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: var(--mic-bg);
+            color: #042f2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .mock-mic-btn span { font-size: 2rem; }
+        .mock-mic-label {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .mock-emergency-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 8px 12px 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mock-em-btn {
+            height: 44px;
+            border-radius: 12px;
+            background: var(--emergency-bg);
+            border: 1px solid var(--emergency-border);
+            color: var(--emergency-text);
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .mock-em-btn.help {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+        }
+
+        @media (max-width: 600px) {
+            .phone-wrapper {
+                border: none;
+                border-radius: 0;
+                max-width: 100%;
+                height: 100vh;
+                margin: 0;
+            }
+            .dynamic-island { display: none; }
+            .app-viewport { padding-top: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="showcase-header">
+        <div class="showcase-title-row">
+            <div class="showcase-title">
+                <span class="material-symbols-outlined">style</span>
+                <span>Vocale AI - Galleria 10 Design Stitch (iPhone 13+)</span>
+            </div>
+            <a href="index.html" style="color: #38bdf8; text-decoration: none; font-size: 0.85rem; font-weight: 700;">← Torna all'App</a>
+        </div>
+
+        <div class="theme-chips-container" id="theme-selector">
+            <button class="theme-chip active" data-theme="1" data-desc="Nero ossidiana profondo (#0B0F19), ciano fluorescente (#06B6D4), bagliori neon e contrasto estremo OLED.">1. 🌟 Cyber-Glow Dark</button>
+            <button class="theme-chip" data-theme="2" data-desc="Stile Apple nativo iOS 18: superfici in vetro satinato (Frosted Glass), controlli segmentati e azzurro Cupertino.">2. 🍏 iOS Cupertino</button>
+            <button class="theme-chip" data-theme="3" data-desc="Massima accessibilità visiva: nero assoluto OLED, bordi spessi 2px Giallo Sicurezza e Ciano Elettrico.">3. 👁️ High-Contrast Tactile</button>
+            <button class="theme-chip" data-theme="4" data-desc="Superfici in ardesia scura con ombre 3D morbide estruse che simulano tasti fisici reali al tocco.">4. 🔘 Soft Neumorphic</button>
+            <button class="theme-chip" data-theme="5" data-desc="Minimalismo scandinavo: carbone opaco caldo (#18181B) con eleganti riflessi miele e ambra (#F59E0B).">5. ☕ Nordic Charcoal & Amber</button>
+            <button class="theme-chip" data-theme="6" data-desc="Gradienti fluidi a rete (smeraldo, violetto, ciano) che pulsano dietro le tessere e il microfono.">6. 🌌 Aurora Mesh Gradient</button>
+            <button class="theme-chip" data-theme="7" data-desc="Schede in vetro stratificato fluttuanti a più livelli con riflessi zaffiro e dock sopraelevato.">7. 🗂️ Layered Glassmorphic</button>
+            <button class="theme-chip" data-theme="8" data-desc="Layout a raggio di pollice con target ingranditi nell'area inferiore per facilitare l'uso ad una mano.">8. 🎯 Ergonomic Thumb Arc</button>
+            <button class="theme-chip" data-theme="9" data-desc="Codifica colore binaria ultra-veloce (Ciano per il dialogo, Arancio per bisogni/emergenze) e tipografia tecnica.">9. ⚡ Bionic Duo-Tone</button>
+            <button class="theme-chip" data-theme="10" data-desc="Struttura asimmetrica moderna a blocchi Bento-box ottimizzata per display ProMotion a 120Hz.">10. 🍱 Bento-Grid Modular</button>
+        </div>
+
+        <div class="theme-desc-bar" id="theme-desc">
+            <strong>1. Cyber-Glow Neon Dark:</strong> Nero ossidiana profondo (#0B0F19), ciano fluorescente (#06B6D4), bagliori neon e contrasto estremo OLED.
+        </div>
+    </header>
+
+    <div class="phone-wrapper">
+        <div class="dynamic-island">
+            <div class="camera"></div>
+        </div>
+
+        <div class="app-viewport theme-1" id="app-view">
+            <div class="mock-header">
+                <div class="mock-logo">
+                    <span class="material-symbols-outlined" style="color: var(--accent);">graphic_eq</span>
+                    <span>Vocale <span class="accent">AI</span></span>
+                </div>
+                <div class="mock-header-right">
+                    <div class="mock-badge">Online</div>
+                    <div class="mock-icon-btn"><span class="material-symbols-outlined">history</span></div>
+                    <div class="mock-icon-btn"><span class="material-symbols-outlined">settings</span></div>
+                </div>
+            </div>
+
+            <div class="mock-container">
+                <div class="mock-heard-card">
+                    <div class="mock-heard-top">
+                        <span class="mock-heard-badge">● Ascoltato:</span>
+                        <div class="mock-wave"></div>
+                    </div>
+                    <div class="mock-heard-text">Vuoi venire a prendere un caffè con noi?</div>
+                </div>
+
+                <div class="mock-tone-bar">
+                    <div class="mock-tone-pills">
+                        <span class="mock-tone-pill active">💬 Informale</span>
+                        <span class="mock-tone-pill">👔 Formale</span>
+                        <span class="mock-tone-pill">🎭 Scherzoso</span>
+                        <span class="mock-tone-pill">⚡ Sintetico</span>
+                    </div>
+                    <div class="mock-regen-btn">
+                        <span class="material-symbols-outlined" style="font-size: 0.9rem;">refresh</span>
+                        <span>Altre</span>
+                    </div>
+                </div>
+
+                <div class="mock-grid">
+                    <div class="mock-card">
+                        <span class="material-symbols-outlined mock-card-icon">coffee</span>
+                        <span class="mock-card-badge">1</span>
+                        <span class="mock-card-text">Sì, volentieri!</span>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-outlined mock-card-icon">schedule</span>
+                        <span class="mock-card-badge">2</span>
+                        <span class="mock-card-text">Non posso ora</span>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-outlined mock-card-icon">help</span>
+                        <span class="mock-card-badge">3</span>
+                        <span class="mock-card-text">Che tipo di caffè?</span>
+                    </div>
+                    <div class="mock-card" style="border-style: dashed;">
+                        <span class="material-symbols-outlined mock-card-icon">keyboard</span>
+                        <span class="mock-card-badge">4</span>
+                        <span class="mock-card-text">Scrivi altro...</span>
+                    </div>
+                </div>
+
+                <div class="mock-mic-section">
+                    <button class="mock-mic-btn">
+                        <span class="material-symbols-outlined">mic</span>
+                    </button>
+                    <span class="mock-mic-label">Tocca per parlare</span>
+                </div>
+            </div>
+
+            <div class="mock-emergency-bar">
+                <button class="mock-em-btn help">🚨 AIUTO</button>
+                <button class="mock-em-btn">🥤 SETE</button>
+                <button class="mock-em-btn">🚾 BAGNO</button>
+                <button class="mock-em-btn">⚠️ DOLORE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chips = document.querySelectorAll('.theme-chip');
+        const appView = document.getElementById('app-view');
+        const descBar = document.getElementById('theme-desc');
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+
+                const themeNum = chip.dataset.theme;
+                const themeDesc = chip.dataset.desc;
+                const themeName = chip.textContent;
+
+                appView.className = 'app-viewport theme-' + themeNum;
+                descBar.innerHTML = '<strong>' + themeName + ':</strong> ' + themeDesc;
+
+                if (navigator.vibrate) {
+                    navigator.vibrate(20);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

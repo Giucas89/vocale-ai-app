@@ -1,9 +1,10 @@
-const CACHE_NAME = 'vocale-ai-cache-v3';
+const CACHE_NAME = 'vocale-ai-cache-v5';
 const ASSETS = [
   './',
   'index.html',
   'style.css',
   'script.js',
+  'themes_gallery.html',
   'manifest.json'
 ];
 
