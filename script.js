@@ -335,10 +335,10 @@ async function populateAvailableModels(key) {
 
 // Tone & Response Styles
 const toneDescriptions = {
-    informale: 'Stile informale, colloquiale, amichevole, spontaneo ed empatico.',
-    formale: 'Stile formale, educato, rispettoso, professionale (usa il "Lei" se opportuno).',
-    scherzoso: 'Stile simpatico, brillante, ironico ed espressivo.',
-    sintetico: 'Stile ultra-sintetico, essenziale e diretto al punto, 1-3 parole al massimo.'
+    informale: 'Stile informale, colloquiale, amichevole ed empatico (usa il "tu", esclamazioni naturali, linguaggio sciolto e spontaneo).',
+    formale: 'Stile formale, educato, rispettoso e professionale (usa il "Lei", formule di cortesia e lessico accurato).',
+    scherzoso: 'Stile simpatico, brillante, ironico, spiritoso ed espressivo (battute leggere, risposte vivaci ed energiche).',
+    sintetico: 'Stile ultra-sintetico, telegrafico ed essenziale (1-2 parole al massimo, zero fronzoli).'
 };
 
 function initTonePills() {
@@ -1174,32 +1174,51 @@ function drawSimulatedWave() {
     simulatedPhase += 0.14; // Wave oscillation speed
 }
 
-// Local Offline Fallback Processor
+// Local Offline Fallback Processor (Extended CAA Heuristics)
 function processOfflineFallback(transcript) {
     const raw = transcript.toLowerCase();
     let suggestions = [];
     
-    if (raw.includes('fame') || raw.includes('mangiare') || raw.includes('cibo') || raw.includes('pranzo') || raw.includes('cena') || raw.includes('pasta')) {
-        suggestions = ["Sì, ho fame", "No, sono a posto", "Vorrei mangiare qualcosa"];
-    } else if (raw.includes('sete') || raw.includes('bere') || raw.includes('acqua') || raw.includes('caffè') || raw.includes('bibita')) {
-        suggestions = ["Sì, ho sete", "Vorrei dell'acqua", "Un caffè, grazie"];
-    } else if (raw.includes('stai') || raw.includes('senti') || raw.includes('salute') || raw.includes('stanco') || raw.includes('triste')) {
-        suggestions = ["Sto bene, grazie", "Sono stanco", "Non mi sento molto bene"];
-    } else if (raw.includes('male') || raw.includes('dolore') || raw.includes('aiuto') || raw.includes('medico') || raw.includes('fa male')) {
-        suggestions = ["Sento dolore qui", "Ho bisogno di aiuto", "Tutto a posto per ora"];
-    } else if (raw.includes('bagno') || raw.includes('toilette') || raw.includes('pipì')) {
-        suggestions = ["Devo andare in bagno", "No, sono a posto", "Mi aiuti ad andare?"];
-    } else if (raw.includes('ciao') || raw.includes('salve') || raw.includes('giorno') || raw.includes('sera')) {
-        suggestions = ["Ciao, come stai?", "Buongiorno", "Piacere di vederti"];
-    } else if (raw.includes('vuoi') || raw.includes('piace') || raw.includes('fai') || raw.includes('ti va')) {
-        suggestions = ["Sì, volentieri", "No, grazie", "Non saprei"];
+    // 1. Cibo & Pasti
+    if (raw.includes('fame') || raw.includes('mangiare') || raw.includes('cibo') || raw.includes('pranzo') || raw.includes('cena') || raw.includes('pasta') || raw.includes('pizza') || raw.includes('ristorante')) {
+        suggestions = ["Sì, ho fame!", "Cosa mangiamo?", "Non ho molta fame"];
+    // 2. Bevande & Caffè
+    } else if (raw.includes('sete') || raw.includes('bere') || raw.includes('acqua') || raw.includes('caffè') || raw.includes('caffe') || raw.includes('tè') || raw.includes('bibita')) {
+        suggestions = ["Un bicchiere d'acqua!", "Un caffè, grazie!", "No, grazie, a posto"];
+    // 3. Saluti & Incontri
+    } else if (raw.includes('ciao') || raw.includes('salve') || raw.includes('buongiorno') || raw.includes('buonasera') || raw.includes('piacere')) {
+        suggestions = ["Ciao! Come stai?", "Buongiorno a tutti!", "Piacere di vederti!"];
+    // 4. Benessere & Salute
+    } else if (raw.includes('come stai') || raw.includes('senti') || raw.includes('salute') || raw.includes('stanco') || raw.includes('sonno')) {
+        suggestions = ["Sto bene, grazie!", "Sono un po' stanco", "Potrebbe andare meglio"];
+    // 5. Dolore & Bisogno di Aiuto
+    } else if (raw.includes('male') || raw.includes('dolore') || raw.includes('aiuto') || raw.includes('medico') || raw.includes('fa male') || raw.includes('soccorso')) {
+        suggestions = ["Sento dolore qui!", "Ho bisogno di aiuto", "Tranquilli, sto bene"];
+    // 6. Bagno & Fisiologia
+    } else if (raw.includes('bagno') || raw.includes('toilette') || raw.includes('pipì') || raw.includes('pipi')) {
+        suggestions = ["Devo andare in bagno!", "Mi puoi accompagnare?", "No, sono a posto"];
+    // 7. Scelte, Proposte & Inviti ("vuoi", "ti va", "andiamo", "preferisci")
+    } else if (raw.includes('vuoi') || raw.includes('ti va') || raw.includes('andiamo') || raw.includes('preferisci') || raw.includes('facciamo')) {
+        suggestions = ["Sì, volentieri!", "Perché no? Ci sto!", "Preferisco di no oggi"];
+    // 8. Opinioni & Dibattiti ("cosa pensi", "secondo te", "d'accordo")
+    } else if (raw.includes('pensi') || raw.includes('secondo te') || raw.includes('d\'accordo') || raw.includes('daccordo') || raw.includes('idea')) {
+        suggestions = ["Sono d'accordo!", "Secondo me no", "Dipende dalla situazione"];
+    // 9. Tempo, Orari & Ritardo
+    } else if (raw.includes('quando') || raw.includes('ora') || raw.includes('orario') || raw.includes('tardi') || raw.includes('presto') || raw.includes('tempo')) {
+        suggestions = ["A che ora?", "Facciamo più tardi?", "Dobbiamo fare presto!"];
+    // 10. Luoghi & Spostamenti
+    } else if (raw.includes('dove') || raw.includes('uscire') || raw.includes('casa') || raw.includes('fuori') || raw.includes('posto')) {
+        suggestions = ["Dove andiamo?", "Restiamo qui tranquilli", "Usciamo all'aria aperta!"];
+    // 11. Meteo & Ambiente
+    } else if (raw.includes('freddo') || raw.includes('caldo') || raw.includes('pioggia') || raw.includes('tempo') || raw.includes('aria')) {
+        suggestions = ["Fa molto caldo!", "Fa abbastanza freddo", "Si sta benissimo!"];
     } else {
-        // Safe default
-        suggestions = ["Sì", "No", "Non ho capito"];
+        // Fallback Universale Triadico
+        suggestions = ["Sì, certamente!", "Puoi rispiegare?", "Non sono convinto"];
     }
     
     updateSuggestions(suggestions);
-    showStatus("Scegli cosa dire (Offline/Fallback):");
+    showStatus("Scegli cosa dire (Offline):");
 }
 
 // Gemini AI Call (Optimized speed configs & Concurrency control)
@@ -1233,38 +1252,55 @@ async function processSpeechContext(text, userDirectlyAddressed = false, isRegen
     
     let targetAlertInstruction = "";
     if (userDirectlyAddressed) {
-        targetAlertInstruction = " ATTENZIONE: l'interlocutore ha chiamato l'utente direttamente per nome; una delle 3 opzioni deve rispondere direttamente o salutare.";
+        targetAlertInstruction = " NOTA: L'interlocutore si è rivolto DIRETTAMENTE all'utente per nome; la prima opzione DEVE essere una risposta diretta o saluto.";
     }
 
     const toneInstruction = toneDescriptions[currentTone] || toneDescriptions.informale;
 
     const userProfileInstruction = aiInstructions 
-        ? `Profilo e preferenze di comunicazione dell'utente (personalizza lessico e stile in base a questo): "${aiInstructions}"`
-        : 'Stile di default: Neutro, amichevole ed educato.';
+        ? `Profilo e preferenze personalizzate dell'utente: "${aiInstructions}"`
+        : 'Stile di default: Neutro, amichevole, chiaro ed educato.';
 
     const regenInstruction = isRegenerate 
-        ? "IMPORTANTE: Genera 3 opzioni DIVERSE e alternative rispetto a quelle fornite prima per stimolare nuove risposte." 
+        ? "IMPORTANTE (Rigenerazione): Fornisci 3 opzioni COMPLETAMENTE DIVERSE dalle precedenti, esplorando nuove prospettive o risposte inattese." 
         : "";
 
-    const systemPrompt = `Sei un Facilitatore Conversazionale Avanzato per un utente non-verbale che comunica tramite CAA.
-L'utente sta ascoltando una conversazione che avviene nell'ambiente circostante (può coinvolgere più persone che parlano tra loro o che si rivolgono a lui). Il tuo compito è suggerire 3 frasi in italiano, brevi (1-5 parole), naturali ed empatiche, che permettano all'utente di inserirsi attivamente e con naturalezza nel discorso.
+    const systemPrompt = `Sei un Facilitatore Conversazionale Avanzato per un utente non-verbale che comunica in tempo reale tramite CAA (Comunicazione Aumentativa e Alternativa).
+L'utente ascolta la conversazione circostante (discorsi d'ambiente tra più persone o domande dirette a lui).
 
-Tono selezionato dall'utente: ${toneInstruction}
+IL TUO OBIETTIVO:
+Generare esattamente 3 frasi in italiano pronte per essere pronunciate tramite sintesi vocale (TTS).
+
+REGOLA DELLA TRIADE COMUNICATIVA (Le 3 opzioni DEVONO coprire 3 scopi differenti per arricchire il dialogo):
+- Opzione 1 [Reazione / Assenso / Risposta Diretta]: Accordo, disaccordo netto, opinione o risposta immediata.
+- Opzione 2 [Rilancio / Domanda / Approfondimento]: Domanda stimolante per approfondire o chiedere chiarimenti.
+- Opzione 3 [Proposta / Iniziativa / Battuta / Bisogno]: Cambio punto di vista, battuta spiritosa, proposta attiva o espressione di un bisogno.
+
+VINCOLI DI QUALITÀ E LUNGHEZZA:
+1. Brevità assoluta: da 1 a 5 parole per opzione (MAI frasi lunghe).
+2. Punteggiatura espressiva: usa sempre '!' o '?' per guidare l'espressività della voce TTS.
+3. Naturalezza parlata: evita formule artificiali ("Certamente ritengo che..."). Usa italiano autentico e vivo.
+4. Registro richiesto: ${toneInstruction}
 ${userProfileInstruction}
 ${regenInstruction}
 
-Istruzioni per diversificare le 3 opzioni (Devono coprire diversi scopi comunicativi per arricchire la conversazione):
-- Opzione 1 (Commento / Assenso / Dissenso): Esprimi un'opinione rapida o accordo/disaccordo rispetto al discorso udito (es. "Sono d'accordo", "Secondo me no", "Che bello!").
-- Opzione 2 (Domanda / Interazione): Rilancia il discorso o chiedi chiarimenti (es. "Davvero?", "Chi l'ha detto?", "Puoi spiegare?").
-- Opzione 3 (Iniziativa / Bisogno / Proposta): Prendi l'iniziativa, proponi qualcosa, fai una battuta o esprimi un bisogno (es. "Vorrei dire una cosa", "Cambiamo discorso", "Ho fame").
+ESEMPI FEW-SHOT:
+- Udito: "Stasera ordiniamo una pizza o andiamo al ristorante cinese?" (Informale)
+  ["Voto per la pizza!", "A che ora ordiniamo?", "Preferisco il cinese!"]
+- Udito: "La riunione è fissata per le dieci di domani mattina." (Formale)
+  ["Sarò puntuale!", "Serve preparare qualcosa?", "Invio il promemoria"]
+- Udito: "Ho dimenticato di nuovo dove ho parcheggiato l'auto!" (Scherzoso)
+  ["Sei un disastro!", "Hai provato a piedi?", "Colpa dei parcheggi!"]
+- Udito: "Vuoi un caffè o preferisci un bicchiere d'acqua fresca?" (Sintetico)
+  ["Un caffè, grazie!", "Solo acqua fresca", "Niente per ora"]
 
-Istruzioni speciali:
-- Analizza l'intera cronologia della conversazione per comprendere il filo logico:
+CONTESTO ATTUALE:
+- Cronologia recente:
 ${chatHistoryContext}
-- Adattati allo stile e alle frasi preferite dell'utente: ${preferredContext}.
-- Dati ambientali: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
+- Frasi abituali dell'utente: ${preferredContext}
+- Ambiente: Ora: ${timeOfDay}, Luogo: ${locationContext}.${targetAlertInstruction}
 
-Rispondi SOLO con un array JSON di 3 stringhe in formato: ["Opzione 1", "Opzione 2", "Opzione 3"]`;
+Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"]`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
 
@@ -1272,7 +1308,7 @@ Rispondi SOLO con un array JSON di 3 stringhe in formato: ["Opzione 1", "Opzione
         contents: [
             {
                 role: "user",
-                parts: [{ text: `Contesto udito nell'ambiente: "${text}"` }]
+                parts: [{ text: `Contesto udito: "${text}"` }]
             }
         ],
         systemInstruction: {
@@ -1286,8 +1322,8 @@ Rispondi SOLO con un array JSON di 3 stringhe in formato: ["Opzione 1", "Opzione
                     type: "string"
                 }
             },
-            temperature: isRegenerate ? 0.7 : 0.45,
-            maxOutputTokens: 100
+            temperature: isRegenerate ? 0.75 : 0.4,
+            maxOutputTokens: 90
         }
     };
 
