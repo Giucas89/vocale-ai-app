@@ -6,11 +6,13 @@ let apiKey = localStorage.getItem('vocale_api_key') || '';
 let username = localStorage.getItem('vocale_username') || '';
 let locationContext = localStorage.getItem('vocale_location') || 'Generico';
 let savedModel = localStorage.getItem('vocale_model_id');
-if (!savedModel || savedModel.includes('3.1') || savedModel.includes('3.5')) {
-    savedModel = 'gemini-2.5-flash-lite';
+if (!savedModel || savedModel.includes('3.1') || savedModel.includes('3.5') || savedModel.includes('2.5-flash-lite')) {
+    savedModel = 'gemini-2.0-flash';
     localStorage.setItem('vocale_model_id', savedModel);
 }
 let modelId = savedModel;
+let activeUtterance = null; // Prevent SpeechSynthesisUtterance garbage collection freeze
+let speechWatchdogTimer = null;
 let aiInstructions = localStorage.getItem('vocale_ai_instructions') || '';
 let currentTone = localStorage.getItem('vocale_tone') || 'informale';
 let lastHeardText = '';
@@ -225,6 +227,7 @@ if (SpeechRecognition) {
 
             // Start debounce timer (wait 500ms of absolute silence before processing)
             interimSilenceTimer = setTimeout(() => {
+                interimSilenceTimer = null;
                 console.log("Silenzio rilevato. Processo trascrizione intermedia per accelerare la risposta.");
                 // Stop microphone to finalize speech stream
                 if (recognition) {
@@ -432,9 +435,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check API Key
     if (!apiKey) {
         showStatus("Imposta la chiave API nelle Impostazioni (icona ⚙️)");
+        loadInitialSuggestions();
     } else {
         showStatus(listeningMode === 'continuous' ? "Ascolto passivo pronto. Attiva col microfono." : "Tocca il microfono per parlare");
-        enablePredictiveButtons(false);
+        loadInitialSuggestions();
         populateAvailableModels(apiKey);
     }
 
@@ -664,10 +668,10 @@ settingsSaveBtn.addEventListener('click', () => {
 
     if (apiKey) {
         showStatus(listeningMode === 'continuous' ? "Ascolto passivo pronto. Attiva col microfono." : "Tocca il microfono per parlare");
-        enablePredictiveButtons(false);
+        loadInitialSuggestions();
     } else {
         showStatus("Imposta la chiave API nelle Impostazioni (icona ⚙️)");
-        disableAllSuggestions();
+        loadInitialSuggestions();
     }
 });
 
@@ -677,6 +681,8 @@ clearMemoryBtn.addEventListener('click', () => {
         localStorage.removeItem('vocale_history');
         localStorage.removeItem('vocale_chat_history');
         localStorage.removeItem('vocale_phrase_frequencies');
+        renderHistoryLog();
+        loadInitialSuggestions();
         alert("Cronologia cancellata.");
     }
 });
@@ -834,14 +840,14 @@ function updateMicUI(listening) {
     }
 }
 
-function enablePredictiveButtons(hasData) {
-    suggestBtns.forEach((btn, index) => {
-        btn.disabled = false;
-        btn.classList.remove('empty');
-        if (!hasData) {
-            btn.querySelector('.btn-text').textContent = `Tasto rapido ${index + 1}`;
-        }
-    });
+function loadInitialSuggestions() {
+    const topPhrases = getTopPreferredPhrases(3);
+    const starterPhrases = ["Sì, certamente!", "Grazie mille!", "Tutto a posto!"];
+    const initialPhrases = topPhrases.length >= 3 
+        ? topPhrases.slice(0, 3) 
+        : [...topPhrases, ...starterPhrases].slice(0, 3);
+    
+    updateSuggestions(initialPhrases);
 }
 
 function disableAllSuggestions() {
@@ -886,19 +892,26 @@ if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !=
     speechSynthesis.onvoiceschanged = populateVoiceList;
 }
 
-// Speak logic
+// Speak logic (Protected with Watchdog & GC Retention)
 function speak(text) {
     if (!text) return;
     
     if ('speechSynthesis' in window) {
         isSpeaking = true;
         
-        // Stop recognition to prevent self-looping feedback
+        // Stop recognition to prevent self-looping audio feedback
         if (recognition && isListening) {
-            recognition.stop();
+            try { recognition.stop(); } catch(e) {}
+        }
+
+        // Clear any pending speech watchdog timer
+        if (speechWatchdogTimer) {
+            clearTimeout(speechWatchdogTimer);
+            speechWatchdogTimer = null;
         }
         
         const utterance = new SpeechSynthesisUtterance(text);
+        activeUtterance = utterance; // Prevent garbage collection mid-speech
         
         const voices = speechSynthesis.getVoices();
         const selectedVoiceName = localStorage.getItem('vocale_voice_name');
@@ -909,34 +922,55 @@ function speak(text) {
         
         utterance.rate = parseFloat(localStorage.getItem('vocale_voice_rate') || '1.0');
         utterance.pitch = parseFloat(localStorage.getItem('vocale_voice_pitch') || '1.0');
-        
-        window.speechSynthesis.cancel();
+
+        const finalizeSpeech = () => {
+            if (speechWatchdogTimer) {
+                clearTimeout(speechWatchdogTimer);
+                speechWatchdogTimer = null;
+            }
+            activeUtterance = null;
+            isSpeaking = false;
+            
+            // Resume listening in passive continuous mode
+            if (isListening && listeningMode === 'continuous' && recognition) {
+                setTimeout(() => {
+                    if (isListening && listeningMode === 'continuous' && !isSpeaking) {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error("Riavvio microfono post-parola fallito:", e);
+                        }
+                    }
+                }, 300);
+            }
+        };
         
         utterance.onend = () => {
-            isSpeaking = false;
             saveToHistory(text);
-            
-            // Resume listening in passive mode
-            if (isListening && listeningMode === 'continuous' && recognition) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error("Riavvio microfono post-parola fallito:", e);
-                }
-            }
+            finalizeSpeech();
         };
         
-        utterance.onerror = () => {
-            isSpeaking = false;
-            if (isListening && listeningMode === 'continuous' && recognition) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error("Riavvio microfono post-errore fallito:", e);
-                }
-            }
+        utterance.onerror = (e) => {
+            console.warn("Evento errore sintesi vocale:", e);
+            finalizeSpeech();
         };
+
+        // Safety watchdog: WebKit on iOS/Chrome can occasionally drop onend
+        const wordsCount = text.trim().split(/\s+/).length;
+        const estimatedDurationMs = Math.max(4500, wordsCount * 1200);
+        speechWatchdogTimer = setTimeout(() => {
+            if (isSpeaking) {
+                console.warn("Watchdog sintesi vocale scattato: forzatura reset isSpeaking.");
+                finalizeSpeech();
+            }
+        }, estimatedDurationMs);
+
+        // Resume engine if paused by browser
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
         
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
         
         const oldStatus = statusDiv.textContent;
@@ -1035,11 +1069,22 @@ function getTimeOfDay() {
 async function startVisualizer() {
     if (animationId) {
         cancelAnimationFrame(animationId);
+        animationId = null;
     }
     
     // Set matching bounds
-    visualizerCanvas.width = visualizerCanvas.offsetWidth;
-    visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    if (visualizerCanvas.offsetWidth > 0) {
+        visualizerCanvas.width = visualizerCanvas.offsetWidth;
+        visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    }
+
+    // iOS/WebKit safe mode: avoid getUserMedia collision with Web Speech recognition
+    const isIOSorSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                          (navigator.vendor && navigator.vendor.includes('Apple'));
+    if (isIOSorSafari) {
+        drawSimulatedWave();
+        return;
+    }
 
     try {
         // Try requesting real mic stream for visual analysis
@@ -1062,8 +1107,7 @@ async function startVisualizer() {
         drawRealTimeWave();
         console.log("Real-time visualizer initialized.");
     } catch (e) {
-        // Normal on iOS/Safari when WebSpeech holds microhpone lock. Fallback to procedural wave.
-        console.log("Falling back to simulated waves (iOS/Safari mic lock compatibility).");
+        // Fallback to procedural wave
         drawSimulatedWave();
     }
 }
@@ -1344,9 +1388,27 @@ Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"
 
         const data = await response.json();
         const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!responseText) throw new Error("Nessun testo generato dall'API.");
         
-        let suggestions = JSON.parse(responseText);
-        if (Array.isArray(suggestions) && suggestions.length >= 3) {
+        // Clean possible markdown code fences (```json ... ```)
+        let cleanJson = responseText.trim();
+        if (cleanJson.startsWith('```')) {
+            cleanJson = cleanJson.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        }
+
+        let parsed = JSON.parse(cleanJson);
+        let suggestions = [];
+
+        if (Array.isArray(parsed)) {
+            suggestions = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+            const arrayProp = Object.values(parsed).find(val => Array.isArray(val));
+            if (arrayProp) {
+                suggestions = arrayProp;
+            }
+        }
+
+        if (suggestions.length >= 3) {
             updateSuggestions(suggestions.slice(0, 3));
             showStatus("Scegli cosa dire:");
         } else {

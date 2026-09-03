@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vocale-ai-cache-v6';
+const CACHE_NAME = 'vocale-ai-cache-v7';
 const ASSETS = [
   './',
   'index.html',
