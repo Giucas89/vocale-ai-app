@@ -13,11 +13,63 @@ if (!savedModel || savedModel.includes('3.1') || savedModel.includes('3.5') || s
 let modelId = savedModel;
 let activeUtterance = null; // Prevent SpeechSynthesisUtterance garbage collection freeze
 let speechWatchdogTimer = null;
+let activeSpeakingBtn = null;
+let wakeLockSentinel = null;
 let aiInstructions = localStorage.getItem('vocale_ai_instructions') || '';
 let currentTone = localStorage.getItem('vocale_tone') || 'informale';
 let lastHeardText = '';
 let lastUserDirectlyAddressed = false;
 let currentAiAbortController = null;
+
+// Safe LocalStorage Helpers (Prevent QuotaExceeded / Corrupted JSON crashes)
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        console.warn("Impossibile salvare in localStorage:", e);
+    }
+}
+
+function safeGetJSON(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+        console.warn(`JSON corrotto in localStorage per ${key}, uso fallback:`, e);
+        return fallback;
+    }
+}
+
+// Screen Wake Lock Helper (Keep screen awake during active/continuous listening)
+async function requestWakeLock() {
+    if ('wakeLock' in navigator && isListening) {
+        try {
+            if (!wakeLockSentinel) {
+                wakeLockSentinel = await navigator.wakeLock.request('screen');
+                wakeLockSentinel.addEventListener('release', () => {
+                    wakeLockSentinel = null;
+                });
+            }
+        } catch (e) {
+            // Ignore WakeLock rejections (e.g. battery saver mode)
+        }
+    }
+}
+
+function releaseWakeLock() {
+    if (wakeLockSentinel) {
+        try {
+            wakeLockSentinel.release();
+        } catch (e) {}
+        wakeLockSentinel = null;
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isListening) {
+        requestWakeLock();
+    }
+});
 
 // Haptic Feedback Helper (Mobile Vibration)
 function triggerHaptic(duration = 35) {
@@ -373,7 +425,7 @@ function initTonePills() {
     });
 }
 
-// Conversation History Log Renderer
+// Conversation History Log Renderer (Interactive: Tap user bubble to repeat, tap interlocutor bubble to reply)
 function renderHistoryLog() {
     if (!historyChatLog) return;
     const history = getChatHistory();
@@ -395,11 +447,28 @@ function renderHistoryLog() {
         
         const senderSpan = document.createElement('span');
         senderSpan.className = 'chat-sender';
-        senderSpan.textContent = turn.role === 'utente' ? (username || 'Tu') : 'Interlocutore';
+        senderSpan.textContent = turn.role === 'utente' ? `${username || 'Tu'} (Tocca per ripetere 🔊)` : 'Interlocutore';
         
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'chat-bubble';
         bubbleDiv.textContent = turn.text;
+
+        if (turn.role === 'utente') {
+            bubbleDiv.title = "Tocca per pronunciare di nuovo questa frase";
+            bubbleDiv.addEventListener('click', () => {
+                triggerHaptic(30);
+                speak(turn.text);
+            });
+        } else {
+            bubbleDiv.title = "Tocca per rigenerare risposte a questa frase";
+            bubbleDiv.style.cursor = 'pointer';
+            bubbleDiv.addEventListener('click', () => {
+                triggerHaptic(30);
+                historyModal.classList.add('hidden');
+                heardTextSpan.textContent = turn.text;
+                processSpeechContext(turn.text, false, true);
+            });
+        }
         
         turnDiv.appendChild(senderSpan);
         turnDiv.appendChild(bubbleDiv);
@@ -413,6 +482,7 @@ function renderHistoryLog() {
 document.addEventListener('DOMContentLoaded', () => {
     // Load Saved Settings
     apiKeyInput.value = apiKey;
+    instructionsInput.value = aiInstructions;
     usernameInput.value = username;
     locationSelect.value = locationContext;
     listeningModeSelect.value = listeningMode;
@@ -448,6 +518,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tone Selector init & Network badge
     initTonePills();
     updateNetworkStatus();
+
+    // Close modals when tapping outside on the backdrop overlay
+    [settingsModal, historyModal, customModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    triggerHaptic(15);
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+    });
 });
 
 // Settings & Range event listeners
@@ -561,7 +643,7 @@ if (exportBackupBtn) {
         triggerHaptic(30);
         const backupData = {
             app: "Vocale AI",
-            version: 1,
+            version: 2,
             exportedAt: new Date().toISOString(),
             settings: {
                 vocale_api_key: localStorage.getItem('vocale_api_key') || '',
@@ -569,13 +651,15 @@ if (exportBackupBtn) {
                 vocale_username: localStorage.getItem('vocale_username') || '',
                 vocale_location: localStorage.getItem('vocale_location') || 'Generico',
                 vocale_listening_mode: localStorage.getItem('vocale_listening_mode') || 'manual',
-                vocale_model_id: localStorage.getItem('vocale_model_id') || 'gemini-2.5-flash-lite',
+                vocale_model_id: localStorage.getItem('vocale_model_id') || 'gemini-2.0-flash',
                 vocale_voice_name: localStorage.getItem('vocale_voice_name') || '',
                 vocale_voice_rate: localStorage.getItem('vocale_voice_rate') || '1.0',
                 vocale_voice_pitch: localStorage.getItem('vocale_voice_pitch') || '1.0',
                 vocale_tone: localStorage.getItem('vocale_tone') || 'informale',
                 vocale_emergency_buttons: localStorage.getItem('vocale_emergency_buttons') || '',
-                vocale_phrase_frequencies: localStorage.getItem('vocale_phrase_frequencies') || ''
+                vocale_phrase_frequencies: localStorage.getItem('vocale_phrase_frequencies') || '',
+                vocale_history: localStorage.getItem('vocale_history') || '',
+                vocale_chat_history: localStorage.getItem('vocale_chat_history') || ''
             }
         };
 
@@ -609,7 +693,7 @@ if (importBackupFile) {
                 if (data && data.settings) {
                     Object.entries(data.settings).forEach(([key, val]) => {
                         if (val !== undefined && val !== null) {
-                            localStorage.setItem(key, val);
+                            safeSetItem(key, val);
                         }
                     });
                     triggerHaptic([50, 50, 50]);
@@ -620,6 +704,8 @@ if (importBackupFile) {
                 }
             } catch (err) {
                 alert("Errore durante l'importazione del backup: " + err.message);
+            } finally {
+                importBackupFile.value = '';
             }
         };
         reader.readAsText(file);
@@ -635,15 +721,15 @@ settingsSaveBtn.addEventListener('click', () => {
     listeningMode = listeningModeSelect.value;
     modelId = modelSelect.value;
     
-    localStorage.setItem('vocale_api_key', apiKey);
-    localStorage.setItem('vocale_ai_instructions', aiInstructions);
-    localStorage.setItem('vocale_username', username);
-    localStorage.setItem('vocale_location', locationContext);
-    localStorage.setItem('vocale_listening_mode', listeningMode);
-    localStorage.setItem('vocale_model_id', modelId);
-    localStorage.setItem('vocale_voice_rate', voiceRate.value);
-    localStorage.setItem('vocale_voice_pitch', voicePitch.value);
-    localStorage.setItem('vocale_voice_name', voiceSelect.value);
+    safeSetItem('vocale_api_key', apiKey);
+    safeSetItem('vocale_ai_instructions', aiInstructions);
+    safeSetItem('vocale_username', username);
+    safeSetItem('vocale_location', locationContext);
+    safeSetItem('vocale_listening_mode', listeningMode);
+    safeSetItem('vocale_model_id', modelId);
+    safeSetItem('vocale_voice_rate', voiceRate.value);
+    safeSetItem('vocale_voice_pitch', voicePitch.value);
+    safeSetItem('vocale_voice_name', voiceSelect.value);
 
     // Save Emergencies
     const newEm = [];
@@ -653,7 +739,7 @@ settingsSaveBtn.addEventListener('click', () => {
             text: emTxtInputs[i].value.trim() || defaultEmergencies[i].text
         });
     }
-    localStorage.setItem('vocale_emergency_buttons', JSON.stringify(newEm));
+    safeSetItem('vocale_emergency_buttons', JSON.stringify(newEm));
     renderEmergencyFooter();
 
     settingsModal.classList.add('hidden');
@@ -747,24 +833,52 @@ customSpeakBtn.addEventListener('click', () => {
     }
 });
 
-// Word pills predictive generator
+// Contextual Next-Word Bigram Map for Italian CAA Sentence Building
+const caaNextWordMap = {
+    'voglio': ['bere', 'mangiare', 'andare', 'uscire', 'riposare', 'questo'],
+    'vorrei': ['un caffè', 'acqua', 'andare', 'chiedere', 'mangiare', 'riposare'],
+    'posso': ['avere', 'andare', 'chiedere', 'vedere', 'provare', 'aspettare'],
+    'devo': ['andare', 'uscire', 'riposare', 'dirti', 'prendere', 'fermarmi'],
+    'ho': ['fame', 'sete', 'bisogno', 'freddo', 'caldo', 'capito'],
+    'sono': ['stanco', 'contento', 'pronto', 'd\'accordo', 'qui', 'tranquillo'],
+    'non': ['voglio', 'posso', 'so', 'mi piace', 'sto bene', 'capisco'],
+    'mi': ['piace', 'serve', 'aiuti', 'fa male', 'sento', 'porti'],
+    'sento': ['dolore', 'freddo', 'caldo', 'bene', 'male', 'rumore'],
+    'andare': ['a casa', 'in bagno', 'fuori', 'a letto', 'via', 'lì'],
+    'bere': ['acqua', 'un caffè', 'qualcosa', 'adesso', 'per favore', 'grazie'],
+    'mangiare': ['qualcosa', 'adesso', 'dopo', 'insieme', 'pasta', 'pizza'],
+    'bisogno': ['di aiuto', 'del bagno', 'di acqua', 'di riposo', 'del medico', 'di parlare'],
+    'sto': ['bene', 'male', 'aspettando', 'arrivando', 'meglio', 'qui'],
+    'fa': ['caldo', 'freddo', 'male', 'niente', 'piacere', 'vedere']
+};
+
+// Word pills predictive generator (Supports Prefix Completion + Next-Word Bigram Prediction)
 function updatePredictivePills() {
     const text = customTextInput.value;
     const words = text.split(' ');
     const lastWord = words[words.length - 1].toLowerCase().trim();
+    const prevWord = words.length >= 2 ? words[words.length - 2].toLowerCase().trim() : '';
     
     let suggestions = [];
     
     if (lastWord === '') {
-        // Initial starter suggestions
-        suggestions = ['voglio', 'posso', 'devo', 'ho', 'sono', 'non'];
+        if (prevWord && caaNextWordMap[prevWord]) {
+            // Contextual Next-Word prediction based on previous word
+            suggestions = [...caaNextWordMap[prevWord]];
+        } else if (prevWord) {
+            // General connectors and common continuations after any word
+            suggestions = ['per favore', 'grazie', 'adesso', 'dopo', 'molto', 'un po\''];
+        } else {
+            // Initial sentence starters
+            suggestions = ['Vorrei', 'Posso', 'Ho', 'Sono', 'Non', 'Mi'];
+        }
     } else {
         // Match prefix in dictionary
-        suggestions = caaDictionary.filter(word => word.startsWith(lastWord));
+        suggestions = caaDictionary.filter(word => word.startsWith(lastWord) && word !== lastWord);
         
         // Fill up to 6 suggestions if needed
         if (suggestions.length < 6) {
-            const fillers = ['grazie', 'bagno', 'aiuto', 'cibo', 'acqua', 'bene'];
+            const fillers = caaNextWordMap[lastWord] || ['grazie', 'per favore', 'adesso', 'aiuto', 'acqua', 'bene'];
             for (let filler of fillers) {
                 if (!suggestions.includes(filler) && filler !== lastWord) {
                     suggestions.push(filler);
@@ -785,7 +899,9 @@ function updatePredictivePills() {
         btn.onclick = () => {
             triggerHaptic(20);
             const wordsList = customTextInput.value.split(' ');
-            wordsList[wordsList.length - 1] = word;
+            const isFirstWord = wordsList.length === 1 && wordsList[0].trim() === '';
+            const formattedWord = isFirstWord ? (word.charAt(0).toUpperCase() + word.slice(1)) : word;
+            wordsList[wordsList.length - 1] = formattedWord;
             customTextInput.value = wordsList.join(' ') + ' ';
             customTextInput.focus();
             updatePredictivePills();
@@ -799,8 +915,7 @@ customTextInput.addEventListener('input', updatePredictivePills);
 
 // Emergency buttons dynamic logic
 function getEmergencyConfig() {
-    const saved = localStorage.getItem('vocale_emergency_buttons');
-    return saved ? JSON.parse(saved) : defaultEmergencies;
+    return safeGetJSON('vocale_emergency_buttons', defaultEmergencies);
 }
 
 // Emergency buttons renderer
@@ -817,7 +932,7 @@ function renderEmergencyFooter() {
         btn.textContent = item.label;
         btn.onclick = () => {
             triggerHaptic(40);
-            speak(item.text);
+            speak(item.text, btn);
         };
         emergencyBar.appendChild(btn);
     });
@@ -833,10 +948,12 @@ function updateMicUI(listening) {
         micBtn.classList.add('listening');
         micInstruction.textContent = listeningMode === 'continuous' ? "Sempre in ascolto (Tocca per pausare)" : "Ascolto in corso...";
         startVisualizer();
+        requestWakeLock();
     } else {
         micBtn.classList.remove('listening');
         micInstruction.textContent = listeningMode === 'continuous' ? "Tocca per attivare ascolto continuo" : "Tocca per parlare";
         stopVisualizer();
+        releaseWakeLock();
     }
 }
 
@@ -881,7 +998,7 @@ function populateVoiceList() {
             option.selected = true;
         } else if (!selectedVoiceName && voice.lang.startsWith('it')) {
             option.selected = true;
-            localStorage.setItem('vocale_voice_name', voice.name);
+            safeSetItem('vocale_voice_name', voice.name);
         }
         
         voiceSelect.appendChild(option);
@@ -892,11 +1009,37 @@ if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !=
     speechSynthesis.onvoiceschanged = populateVoiceList;
 }
 
-// Speak logic (Protected with Watchdog & GC Retention)
-function speak(text) {
+// Speak logic (Protected with Watchdog, GC Retention & Visual Active State)
+function speak(text, sourceBtn = null) {
     if (!text) return;
     
     if ('speechSynthesis' in window) {
+        // If user taps the same button while it is currently speaking, stop playback
+        if (isSpeaking && sourceBtn && activeSpeakingBtn === sourceBtn) {
+            window.speechSynthesis.cancel();
+            if (speechWatchdogTimer) {
+                clearTimeout(speechWatchdogTimer);
+                speechWatchdogTimer = null;
+            }
+            sourceBtn.classList.remove('speaking-active');
+            activeSpeakingBtn = null;
+            activeUtterance = null;
+            isSpeaking = false;
+            showStatus("Riproduzione interrotta");
+            return;
+        }
+
+        // Clear previous button highlight if switching phrase
+        if (activeSpeakingBtn) {
+            activeSpeakingBtn.classList.remove('speaking-active');
+            activeSpeakingBtn = null;
+        }
+
+        if (sourceBtn) {
+            sourceBtn.classList.add('speaking-active');
+            activeSpeakingBtn = sourceBtn;
+        }
+
         isSpeaking = true;
         
         // Stop recognition to prevent self-looping audio feedback
@@ -927,6 +1070,10 @@ function speak(text) {
             if (speechWatchdogTimer) {
                 clearTimeout(speechWatchdogTimer);
                 speechWatchdogTimer = null;
+            }
+            if (activeSpeakingBtn) {
+                activeSpeakingBtn.classList.remove('speaking-active');
+                activeSpeakingBtn = null;
             }
             activeUtterance = null;
             isSpeaking = false;
@@ -986,15 +1133,13 @@ function speak(text) {
     }
 }
 
-// Local history management
+// Local history management (Protected with safeGetJSON / safeSetItem)
 function getHistory() {
-    const hist = localStorage.getItem('vocale_history');
-    return hist ? JSON.parse(hist) : [];
+    return safeGetJSON('vocale_history', []);
 }
 
 function getPhraseFrequencies() {
-    const freq = localStorage.getItem('vocale_phrase_frequencies');
-    return freq ? JSON.parse(freq) : {};
+    return safeGetJSON('vocale_phrase_frequencies', {});
 }
 
 function saveToFrequencies(text) {
@@ -1006,7 +1151,7 @@ function saveToFrequencies(text) {
     
     let frequencies = getPhraseFrequencies();
     frequencies[text] = (frequencies[text] || 0) + 1;
-    localStorage.setItem('vocale_phrase_frequencies', JSON.stringify(frequencies));
+    safeSetItem('vocale_phrase_frequencies', JSON.stringify(frequencies));
 }
 
 function getTopPreferredPhrases(limit = 5) {
@@ -1018,8 +1163,7 @@ function getTopPreferredPhrases(limit = 5) {
 }
 
 function getChatHistory() {
-    const hist = localStorage.getItem('vocale_chat_history');
-    return hist ? JSON.parse(hist) : [];
+    return safeGetJSON('vocale_chat_history', []);
 }
 
 function saveToChatHistory(role, text) {
@@ -1029,7 +1173,7 @@ function saveToChatHistory(role, text) {
     if (history.length > 8) { // Keep last 8 turns (4 full exchanges)
         history.shift();
     }
-    localStorage.setItem('vocale_chat_history', JSON.stringify(history));
+    safeSetItem('vocale_chat_history', JSON.stringify(history));
 }
 
 function formatChatHistoryForPrompt() {
@@ -1049,7 +1193,7 @@ function saveToHistory(text) {
     history = history.filter(item => item !== text);
     history.unshift(text);
     history = history.slice(0, 15);
-    localStorage.setItem('vocale_history', JSON.stringify(history));
+    safeSetItem('vocale_history', JSON.stringify(history));
 
     // Save to frequencies and chat history
     saveToFrequencies(text);
@@ -1140,13 +1284,12 @@ function drawRealTimeWave() {
     
     analyser.getByteTimeDomainData(dataArray);
     
-    canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
-    canvasCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+    canvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
     
-    canvasCtx.lineWidth = 3;
-    canvasCtx.strokeStyle = '#06b6d4'; // Cyan neon
-    canvasCtx.shadowBlur = 6;
-    canvasCtx.shadowColor = 'rgba(6, 182, 212, 0.8)';
+    canvasCtx.lineWidth = 2.5;
+    canvasCtx.strokeStyle = '#0a84ff'; // Cupertino Azure Blue
+    canvasCtx.shadowBlur = 5;
+    canvasCtx.shadowColor = 'rgba(10, 132, 255, 0.7)';
     
     canvasCtx.beginPath();
     
@@ -1183,13 +1326,12 @@ function drawSimulatedWave() {
     
     animationId = requestAnimationFrame(drawSimulatedWave);
     
-    canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
-    canvasCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+    canvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
     
-    canvasCtx.lineWidth = 3;
-    canvasCtx.strokeStyle = '#06b6d4';
-    canvasCtx.shadowBlur = 6;
-    canvasCtx.shadowColor = 'rgba(6, 182, 212, 0.8)';
+    canvasCtx.lineWidth = 2.5;
+    canvasCtx.strokeStyle = '#0a84ff'; // Cupertino Azure Blue
+    canvasCtx.shadowBlur = 5;
+    canvasCtx.shadowColor = 'rgba(10, 132, 255, 0.7)';
     
     canvasCtx.beginPath();
     
@@ -1265,7 +1407,7 @@ function processOfflineFallback(transcript) {
     showStatus("Scegli cosa dire (Offline):");
 }
 
-// Gemini AI Call (Optimized speed configs & Concurrency control)
+// Gemini AI Call (Optimized speed configs, Visual Thinking State & Concurrency control)
 async function processSpeechContext(text, userDirectlyAddressed = false, isRegenerate = false) {
     lastHeardText = text;
     lastUserDirectlyAddressed = userDirectlyAddressed;
@@ -1285,6 +1427,8 @@ async function processSpeechContext(text, userDirectlyAddressed = false, isRegen
     currentAiAbortController = new AbortController();
     
     showStatus(isRegenerate ? `Rigenero opzioni (${currentTone})...` : "L'IA sta pensando...");
+    suggestBtns.forEach(btn => btn.classList.add('ai-thinking'));
+    if (regenBtn) regenBtn.classList.add('spinning');
     
     const preferred = getTopPreferredPhrases(5);
     const preferredContext = preferred.length > 0
@@ -1346,8 +1490,6 @@ ${chatHistoryContext}
 
 Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"]`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
-
     const requestBody = {
         contents: [
             {
@@ -1372,7 +1514,7 @@ Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"
     };
 
     try {
-        const response = await fetch(url, {
+        let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1380,6 +1522,22 @@ Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"
             body: JSON.stringify(requestBody),
             signal: currentAiAbortController.signal
         });
+
+        // Automatic fallback retry if configured model ID is deprecated or 404
+        if (response.status === 404 && modelId !== 'gemini-2.0-flash') {
+            console.warn(`Modello ${modelId} non trovato (404), ripiego automaticamente su gemini-2.0-flash.`);
+            modelId = 'gemini-2.0-flash';
+            safeSetItem('vocale_model_id', modelId);
+            if (modelSelect) modelSelect.value = modelId;
+            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody),
+                signal: currentAiAbortController.signal
+            });
+        }
 
         if (!response.ok) {
             const errData = await response.json();
@@ -1423,14 +1581,16 @@ Rispondi con un array JSON di 3 stringhe: ["Opzione 1", "Opzione 2", "Opzione 3"
         processOfflineFallback(text);
     } finally {
         currentAiAbortController = null;
+        suggestBtns.forEach(btn => btn.classList.remove('ai-thinking'));
+        if (regenBtn) regenBtn.classList.remove('spinning');
     }
 }
 
 // Material Symbols Mapping (Extended 100+ CAA Dictionary)
 const materialIconMapping = {
     // Accordo / Dissenso & Reazioni
-    'si': 'thumb_up', 'sì': 'thumb_up', 'd\'accordo': 'handshake', 'esatto': 'check_circle', 'certo': 'verified',
-    'ok': 'check', 'va bene': 'thumb_up', 'perfetto': 'done_all', 'fantastico': 'auto_awesome',
+    'si': 'thumb_up', 'sì': 'thumb_up', 'd\'accordo': 'handshake', 'esatto': 'check_circle', 'certo': 'verified', 'certamente': 'verified',
+    'ok': 'check', 'va bene': 'thumb_up', 'perfetto': 'done_all', 'fantastico': 'auto_awesome', 'volentieri': 'thumb_up',
     'no': 'thumb_down', 'mai': 'block', 'sbagliato': 'cancel', 'impossibile': 'do_not_disturb',
     'forse': 'help_center', 'dipende': 'balance', 'non so': 'question_mark', 'boh': 'question_mark',
     
@@ -1451,7 +1611,7 @@ const materialIconMapping = {
     'pillola': 'medication', 'medicina': 'medication', 'infermiere': 'medical_services',
     
     // Emozioni & Stati d'animo
-    'bene': 'sentiment_satisfied', 'felice': 'mood', 'contento': 'mood', 'sorriso': 'sentiment_very_satisfied',
+    'bene': 'sentiment_satisfied', 'posto': 'check_circle', 'felice': 'mood', 'contento': 'mood', 'sorriso': 'sentiment_very_satisfied',
     'triste': 'sentiment_dissatisfied', 'piangere': 'sentiment_very_dissatisfied', 'arrabbiato': 'sentiment_very_dissatisfied',
     'caldo': 'light_mode', 'freddo': 'ac_unit', 'bello': 'auto_awesome', 'brutto': 'thumb_down',
     'paura': 'warning', 'ansia': 'heart_broken', 'tranquillo': 'spa', 'calma': 'spa', 'fastidio': 'do_not_disturb',
@@ -1480,18 +1640,38 @@ const materialIconMapping = {
 function getMaterialIconForText(text) {
     if (!text) return 'chat_bubble_outline';
     const cleanText = text.toLowerCase().trim();
+    const cleanNoPunct = cleanText.replace(/[.,!?;:"'()]/g, ' ').trim();
     
-    // 1. Direct match
-    if (materialIconMapping[cleanText]) return materialIconMapping[cleanText];
+    // 1. Direct match on full phrase
+    if (materialIconMapping[cleanNoPunct]) return materialIconMapping[cleanNoPunct];
     
-    // 2. Keyword/substring match
+    // 2. Multi-word phrase match (e.g. "per favore", "va bene", "non so")
     for (const [key, icon] of Object.entries(materialIconMapping)) {
-        if (cleanText.includes(key)) {
+        if (key.includes(' ') && cleanText.includes(key)) {
             return icon;
         }
     }
 
-    // 3. Smart Heuristic Fallback based on punctuation and patterns
+    // 3. Exact tokenized word match (prevents "buongiorno" from matching "no" or "certamente" from matching "te")
+    const words = cleanText.replace(/[.,!?;:"'()]/g, ' ').split(/\s+/).filter(Boolean);
+    for (const word of words) {
+        if (materialIconMapping[word]) {
+            return materialIconMapping[word];
+        }
+    }
+
+    // 4. Safe stem/prefix match only for longer keywords (>= 4 chars)
+    for (const word of words) {
+        if (word.length >= 4) {
+            for (const [key, icon] of Object.entries(materialIconMapping)) {
+                if (key.length >= 4 && word.startsWith(key.slice(0, -1))) {
+                    return icon;
+                }
+            }
+        }
+    }
+
+    // 5. Smart Heuristic Fallback based on punctuation and patterns
     if (cleanText.includes('?')) return 'help_outline';
     if (cleanText.includes('!')) return 'campaign';
     if (/\d/.test(cleanText)) return 'tag';
@@ -1503,7 +1683,7 @@ function updateSuggestions(options) {
     suggestBtns.forEach((btn, index) => {
         const text = options[index];
         btn.disabled = false;
-        btn.classList.remove('empty');
+        btn.classList.remove('empty', 'ai-thinking');
         
         // Find matching icon
         const iconName = getMaterialIconForText(text);
@@ -1525,7 +1705,7 @@ function updateSuggestions(options) {
         btn.querySelector('.btn-text').textContent = text;
         btn.onclick = () => {
             triggerHaptic(35);
-            speak(text);
+            speak(text, btn);
         };
     });
 }
